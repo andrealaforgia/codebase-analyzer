@@ -11,6 +11,12 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
 
+from src.report.charts import (
+    build_dimension_bars_config,
+    build_gauge_config,
+    build_radar_config,
+    find_weakest_dimension,
+)
 from src.report.models import ReportData
 
 _TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
@@ -29,19 +35,38 @@ def _serialize_report_data(report_data: ReportData) -> str:
     return json.dumps(report_data.model_dump(), default=str, indent=2)
 
 
+def _serialize_chart_config(config: dict) -> str:
+    """Serialize a chart config dict to a JSON string for template embedding."""
+    return json.dumps(config, default=str)
+
+
 def render_report(report_data: ReportData) -> str:
     """Render a complete HTML report from ReportData.
 
-    Sets up the Jinja2 environment, serializes report_data to JSON for
-    injection into the template, and returns the complete HTML string.
+    Builds chart configurations from dimension scores, serializes report_data
+    to JSON for injection into the template, and returns the complete HTML
+    string including the executive summary with gauge, radar, and bar charts.
     """
     environment = _create_jinja_environment()
     template = environment.get_template("base.html")
     report_data_json = _serialize_report_data(report_data)
+
+    radar_config = build_radar_config(report_data.dimensions)
+    gauge_config = build_gauge_config(report_data.overall_score, report_data.rating)
+    bars_config = build_dimension_bars_config(report_data.dimensions)
+    weakest = find_weakest_dimension(report_data.dimensions)
+
     return template.render(
         metadata=report_data.metadata,
         report_data=report_data,
         report_data_json=report_data_json,
+        radar_config=radar_config,
+        gauge_config=gauge_config,
+        bars_config=bars_config,
+        weakest=weakest,
+        radar_config_json=_serialize_chart_config(radar_config),
+        gauge_config_json=_serialize_chart_config(gauge_config),
+        bars_config_json=_serialize_chart_config(bars_config),
     )
 
 

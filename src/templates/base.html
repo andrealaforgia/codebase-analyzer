@@ -1,3 +1,4 @@
+{% from "executive_summary.html" import executive_summary_content %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -182,7 +183,7 @@
     <section id="executive-summary">
         <h2>Executive Summary</h2>
         {% block executive_summary %}
-        <p>Overall health score and risk overview will be rendered here.</p>
+        {{ executive_summary_content(report_data, radar_config, gauge_config, bars_config, weakest) }}
         {% endblock %}
     </section>
 

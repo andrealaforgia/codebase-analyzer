@@ -1,0 +1,191 @@
+{% macro executive_summary_content(report_data, radar_config, gauge_config, bars_config, weakest) %}
+<style>
+    /* ---------- Executive Summary ---------- */
+    .exec-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .gauge-container {
+        text-align: center;
+    }
+
+    .gauge-container .score-number {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-top: -2rem;
+    }
+
+    .gauge-container .rating-label {
+        display: inline-block;
+        font-size: 1rem;
+        font-weight: 600;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        margin-top: 0.5rem;
+    }
+
+    .radar-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .bars-container {
+        margin-bottom: 1.5rem;
+    }
+
+    .weakest-callout {
+        border: 2px solid #dc3545;
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+        background: #fff5f5;
+    }
+
+    .weakest-callout .callout-title {
+        color: #dc3545;
+        font-weight: 700;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .weakest-callout .callout-body {
+        color: #333;
+        font-size: 0.95rem;
+    }
+
+    .risk-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+
+    .risk-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 1rem;
+        background: #fafafa;
+    }
+
+    .risk-card h4 {
+        margin-bottom: 0.5rem;
+        font-size: 1rem;
+    }
+
+    .risk-card p {
+        font-size: 0.9rem;
+        color: #555;
+        margin-top: 0.5rem;
+    }
+
+    .severity-badge {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.15rem 0.5rem;
+        border-radius: 3px;
+        text-transform: uppercase;
+    }
+
+    .severity-high {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .severity-moderate {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .severity-low {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    @media (max-width: 768px) {
+        .exec-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media print {
+        .exec-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .risk-cards {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<!-- Overall Health Gauge + Radar Chart -->
+<div class="exec-grid">
+    <div class="gauge-container">
+        <h3>Overall Health</h3>
+        <canvas id="gaugeChart" width="280" height="160"></canvas>
+        <div class="score-number {% if report_data.rating == 'Excellent' %}rating-excellent{% elif report_data.rating == 'Good' %}rating-good{% elif report_data.rating == 'Needs Attention' %}rating-needs-attention{% else %}rating-critical{% endif %}" style="background:none;">
+            {{ "%.1f"|format(report_data.overall_score) }}
+        </div>
+        <div>
+            <span class="rating-label {% if report_data.rating == 'Excellent' %}rating-excellent{% elif report_data.rating == 'Good' %}rating-good{% elif report_data.rating == 'Needs Attention' %}rating-needs-attention{% else %}rating-critical{% endif %}">
+                {{ report_data.rating }}
+            </span>
+        </div>
+    </div>
+    <div class="radar-container">
+        <canvas id="radarChart" width="320" height="320"></canvas>
+    </div>
+</div>
+
+<!-- Dimension Score Bars -->
+<div class="bars-container">
+    <h3>Dimension Scores</h3>
+    <canvas id="dimensionBarsChart" width="600" height="250"></canvas>
+</div>
+
+<!-- Weakest Dimension Callout -->
+{% if weakest %}
+<div class="weakest-callout">
+    <div class="callout-title">[!] Weakest Dimension: {{ weakest.name }}</div>
+    <div class="callout-body">
+        Score: <strong>{{ "%.1f"|format(weakest.normalized_score) }} / 10</strong>
+        &mdash; {{ weakest.explanation }}
+    </div>
+</div>
+{% endif %}
+
+<!-- Business Risk Summary -->
+{% if report_data.risk_assessments %}
+<h3>Business Risk Summary</h3>
+<div class="risk-cards">
+    {% for risk in report_data.risk_assessments %}
+    <div class="risk-card">
+        <h4>
+            {{ risk.name }}
+            <span class="severity-badge severity-{{ risk.severity|lower }}">{{ risk.severity }}</span>
+        </h4>
+        <p>{{ risk.description }}</p>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Chart.js initialization scripts -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof Chart === 'undefined') return;
+
+    var gaugeConfig = {{ gauge_config_json }};
+    var radarConfig = {{ radar_config_json }};
+    var barsConfig = {{ bars_config_json }};
+
+    new Chart(document.getElementById('gaugeChart'), gaugeConfig);
+    new Chart(document.getElementById('radarChart'), radarConfig);
+    new Chart(document.getElementById('dimensionBarsChart'), barsConfig);
+});
+</script>
+{% endmacro %}
