@@ -1,14 +1,19 @@
-"""Pydantic models for agent JSON output contracts.
+"""Pydantic models for agent JSON output contracts and unified report data.
 
 Each of the 6 analysis agents produces a JSON report conforming to one of these
 frozen models.  Validation enforces required fields, types, and value ranges so
 that invalid agent output is rejected with clear error messages identifying the
 offending field.
+
+Report-level models (ProjectMetadata, DimensionScore, RiskCategory, ReportData)
+define the unified data shape the report generator receives.  Pure functions
+compute_overall_score and derive_rating transform dimension scores into a
+health score and human-readable rating.
 """
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -275,3 +280,117 @@ class RefactoringExpertData(BaseModel):
     risk_distribution: RiskDistribution
     category_distribution: dict[str, int]
     implementation_sequence: list[ImplementationSequenceItem]
+
+
+# ---------------------------------------------------------------------------
+# Report-level models
+# ---------------------------------------------------------------------------
+
+
+class ProjectMetadata(BaseModel):
+    """Metadata about the analyzed project."""
+
+    model_config = ConfigDict(frozen=True)
+
+    project_name: str
+    target_directory: str
+    analysis_date: str
+    total_files: int | None = None
+    total_loc: int | None = None
+    primary_language: str | None = None
+
+
+class DimensionScore(BaseModel):
+    """A single analysis dimension's score, normalized to the 0-10 scale.
+
+    Each dimension carries its own weight for the overall health formula.
+    formula_display shows the formula with substituted values.
+    explanation provides a plain-language description of what the score means.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    name: str
+    raw_score: float
+    normalized_score: float = Field(ge=0, le=10)
+    weight: float = Field(ge=0, le=1)
+    formula_display: str
+    explanation: str
+
+
+class RiskCategory(BaseModel):
+    """A business risk assessment derived from dimension scores."""
+
+    model_config = ConfigDict(frozen=True)
+
+    name: str
+    severity: Literal["HIGH", "MODERATE", "LOW"]
+    contributing_dimensions: list[str]
+    description: str
+
+
+class ReportData(BaseModel):
+    """Unified report data structure passed to the report generator.
+
+    Contains metadata, 0-6 dimension scores (some may be missing),
+    an overall health score (0-100), a human-readable rating, business risk
+    assessments, and raw agent results for detailed drill-down.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    metadata: ProjectMetadata
+    dimensions: list[DimensionScore]
+    overall_score: float = Field(ge=0, le=100)
+    rating: Literal["Critical", "Needs Attention", "Good", "Excellent"]
+    risk_assessments: list[RiskCategory]
+    agent_results: dict[str, Any]
+
+
+# ---------------------------------------------------------------------------
+# Pure functions: overall score and rating derivation
+# ---------------------------------------------------------------------------
+
+
+def compute_overall_score(dimensions: list[DimensionScore]) -> float:
+    """Compute weighted-average health score scaled to 0-100.
+
+    Formula (all 6 dimensions present):
+        health = (code_quality * 0.20 + test_design * 0.20 +
+                  cognitive_load * 0.20 + ddd_compliance * 0.15 +
+                  legacy_safety * 0.15 + refactoring_debt * 0.10) * 10
+
+    When dimensions are missing, their weights are redistributed
+    proportionally among the available dimensions so the score remains
+    on the 0-100 scale.
+    """
+    if not dimensions:
+        return 0.0
+
+    total_weight = sum(dimension.weight for dimension in dimensions)
+    if total_weight == 0.0:
+        return 0.0
+
+    weighted_sum = sum(
+        dimension.normalized_score * (dimension.weight / total_weight)
+        for dimension in dimensions
+    )
+    return weighted_sum * 10.0
+
+
+def derive_rating(overall_score: float) -> str:
+    """Derive a human-readable rating from the overall health score.
+
+    Thresholds:
+        0-40   -> Critical
+        41-60  -> Needs Attention
+        61-80  -> Good
+        81-100 -> Excellent
+    """
+    if overall_score <= 40.0:
+        return "Critical"
+    if overall_score <= 60.0:
+        return "Needs Attention"
+    if overall_score <= 80.0:
+        return "Good"
+    return "Excellent"
