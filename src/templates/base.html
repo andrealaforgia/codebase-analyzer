@@ -1,4 +1,6 @@
 {% from "executive_summary.html" import executive_summary_content %}
+{% from "dimension_detail.html" import dimension_detail_content, dimension_not_available %}
+{% from "appendix.html" import methodology_content %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -110,6 +112,103 @@
         .rating-needs-attention { background: #fff3cd; color: #856404; }
         .rating-critical { background: #f8d7da; color: #721c24; }
 
+        /* ---------- Dimension detail ---------- */
+        .dimension-score-badge {
+            display: inline-block;
+            font-size: 1.8rem;
+            font-weight: 700;
+            padding: 0.4rem 1rem;
+            border-radius: 6px;
+            margin: 0.5rem 0 1rem;
+        }
+
+        .badge-red { background: #f8d7da; color: #721c24; }
+        .badge-orange { background: #fff3cd; color: #856404; }
+        .badge-green { background: #d4edda; color: #155724; }
+
+        /* ---------- Score derivation ---------- */
+        .score-derivation {
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 1.25rem;
+            margin: 1rem 0;
+        }
+
+        .score-derivation h4 {
+            margin-bottom: 0.75rem;
+            color: #1a1a2e;
+        }
+
+        .derivation-detail {
+            margin-left: 1rem;
+        }
+
+        .derivation-row {
+            margin-bottom: 0.4rem;
+        }
+
+        .derivation-label {
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        .derivation-formula {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            background: #e8e8e8;
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+
+        .derivation-explanation {
+            margin-top: 1rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .derivation-explanation h5 {
+            margin-bottom: 0.35rem;
+            color: #555;
+        }
+
+        /* ---------- Not available ---------- */
+        .dimension-not-available {
+            background: #f8f9fa;
+            border: 1px dashed #ccc;
+            border-radius: 6px;
+            padding: 1.5rem;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .not-available-label {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #999;
+            margin-bottom: 0.5rem;
+        }
+
+        .not-available-reason {
+            color: #777;
+            font-size: 0.9rem;
+        }
+
+        /* ---------- Back to summary ---------- */
+        .back-to-summary {
+            margin-top: 1rem;
+        }
+
+        .back-to-summary a {
+            color: #007bff;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .back-to-summary a:hover {
+            text-decoration: underline;
+        }
+
         /* ---------- Footer ---------- */
         footer {
             text-align: center;
@@ -190,49 +289,73 @@
     <section id="code-quality">
         <h2>Code Quality</h2>
         {% block code_quality %}
-        <p>Code smell analysis details will be rendered here.</p>
+        {% if dimensions_by_name.get("code_quality") %}
+        {{ dimension_detail_content(dimensions_by_name["code_quality"], "code-quality") }}
+        {% else %}
+        {{ dimension_not_available("Code Quality") }}
+        {% endif %}
         {% endblock %}
     </section>
 
     <section id="test-design">
         <h2>Test Design</h2>
         {% block test_design %}
-        <p>Test design review details will be rendered here.</p>
+        {% if dimensions_by_name.get("test_design") %}
+        {{ dimension_detail_content(dimensions_by_name["test_design"], "test-design") }}
+        {% else %}
+        {{ dimension_not_available("Test Design") }}
+        {% endif %}
         {% endblock %}
     </section>
 
     <section id="cognitive-load">
         <h2>Cognitive Load</h2>
         {% block cognitive_load %}
-        <p>Cognitive load analysis details will be rendered here.</p>
+        {% if dimensions_by_name.get("cognitive_load") %}
+        {{ dimension_detail_content(dimensions_by_name["cognitive_load"], "cognitive-load") }}
+        {% else %}
+        {{ dimension_not_available("Cognitive Load") }}
+        {% endif %}
         {% endblock %}
     </section>
 
     <section id="ddd">
         <h2>DDD</h2>
         {% block ddd %}
-        <p>DDD architecture analysis details will be rendered here.</p>
+        {% if dimensions_by_name.get("ddd") %}
+        {{ dimension_detail_content(dimensions_by_name["ddd"], "ddd") }}
+        {% else %}
+        {{ dimension_not_available("DDD") }}
+        {% endif %}
         {% endblock %}
     </section>
 
     <section id="legacy">
         <h2>Legacy</h2>
         {% block legacy %}
-        <p>Legacy code expert analysis details will be rendered here.</p>
+        {% if dimensions_by_name.get("legacy") %}
+        {{ dimension_detail_content(dimensions_by_name["legacy"], "legacy") }}
+        {% else %}
+        {{ dimension_not_available("Legacy") }}
+        {% endif %}
         {% endblock %}
     </section>
 
     <section id="refactoring">
         <h2>Refactoring</h2>
         {% block refactoring %}
-        <p>Refactoring recommendations will be rendered here.</p>
+        {% if dimensions_by_name.get("refactoring") %}
+        {{ dimension_detail_content(dimensions_by_name["refactoring"], "refactoring") }}
+        {% else %}
+        {{ dimension_not_available("Refactoring") }}
+        {% endif %}
         {% endblock %}
     </section>
 
     <section id="methodology">
         <h2>Methodology</h2>
         {% block methodology %}
-        <p>Score derivation formulas and methodology will be rendered here.</p>
+        {{ methodology_content() }}
         {% endblock %}
     </section>
 </main>

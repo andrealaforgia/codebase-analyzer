@@ -17,7 +17,7 @@ from src.report.charts import (
     build_radar_config,
     find_weakest_dimension,
 )
-from src.report.models import ReportData
+from src.report.models import DimensionScore, ReportData
 
 _TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
 
@@ -40,6 +40,13 @@ def _serialize_chart_config(config: dict) -> str:
     return json.dumps(config, default=str)
 
 
+def _build_dimensions_by_name(
+    dimensions: list[DimensionScore],
+) -> dict[str, DimensionScore]:
+    """Index dimension scores by name for O(1) lookup in templates."""
+    return {dimension.name: dimension for dimension in dimensions}
+
+
 def render_report(report_data: ReportData) -> str:
     """Render a complete HTML report from ReportData.
 
@@ -56,6 +63,8 @@ def render_report(report_data: ReportData) -> str:
     bars_config = build_dimension_bars_config(report_data.dimensions)
     weakest = find_weakest_dimension(report_data.dimensions)
 
+    dimensions_by_name = _build_dimensions_by_name(report_data.dimensions)
+
     return template.render(
         metadata=report_data.metadata,
         report_data=report_data,
@@ -64,6 +73,7 @@ def render_report(report_data: ReportData) -> str:
         gauge_config=gauge_config,
         bars_config=bars_config,
         weakest=weakest,
+        dimensions_by_name=dimensions_by_name,
         radar_config_json=_serialize_chart_config(radar_config),
         gauge_config_json=_serialize_chart_config(gauge_config),
         bars_config_json=_serialize_chart_config(bars_config),

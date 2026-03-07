@@ -1,0 +1,23 @@
+{% macro score_derivation_panel(dimension) %}
+<div class="score-derivation">
+    <h4>Score Derivation</h4>
+    <div class="derivation-detail">
+        <div class="derivation-row">
+            <span class="derivation-label">Raw Score:</span>
+            <span class="derivation-value">{{ dimension.raw_score }}</span>
+        </div>
+        <div class="derivation-row">
+            <span class="derivation-label">Formula:</span>
+            <code class="derivation-formula">{{ dimension.formula_display }}</code>
+        </div>
+        <div class="derivation-row">
+            <span class="derivation-label">Normalized Score:</span>
+            <span class="derivation-value"><strong>{{ dimension.normalized_score }} / 10</strong></span>
+        </div>
+    </div>
+    <div class="derivation-explanation">
+        <h5>What this means</h5>
+        <p>{{ dimension.explanation }}</p>
+    </div>
+</div>
+{% endmacro %}
