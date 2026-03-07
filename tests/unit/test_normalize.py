@@ -128,7 +128,7 @@ class TestNormalizeCodeQuality:
     def test_returns_correct_weight(self):
         data = _make_code_smell(grade="B")
         result = normalize_code_quality(data)
-        assert result.weight == 0.20
+        assert result.weight == 0.07
 
     def test_raw_score_is_grade_string(self):
         """Raw score stores the numeric mapping of the grade."""
@@ -184,7 +184,7 @@ class TestNormalizeTestDesign:
         )
         result = normalize_test_design(data)
         assert result.name == "test_design"
-        assert result.weight == 0.20
+        assert result.weight == 0.07
 
     def test_formula_display_shows_farley_index(self):
         data = TestDesignReviewerData(
@@ -237,7 +237,7 @@ class TestNormalizeCognitiveLoad:
         data = _make_cognitive_load(cli_score=312)
         result = normalize_cognitive_load(data)
         assert result.name == "cognitive_load"
-        assert result.weight == 0.20
+        assert result.weight == 0.07
 
     def test_formula_display_shows_calculation(self):
         data = _make_cognitive_load(cli_score=312)
@@ -283,7 +283,7 @@ class TestNormalizeDddCompliance:
         )
         result = normalize_ddd_compliance(data)
         assert result.name == "ddd_compliance"
-        assert result.weight == 0.15
+        assert result.weight == 0.05
 
     def test_formula_display_shows_score(self):
         data = DDDArchitectData(
@@ -335,7 +335,7 @@ class TestNormalizeLegacySafety:
         )
         result = normalize_legacy_safety(data)
         assert result.name == "legacy_safety"
-        assert result.weight == 0.15
+        assert result.weight == 0.05
 
     def test_formula_display_shows_score(self):
         data = LegacyCodeExpertData(
@@ -407,7 +407,7 @@ class TestNormalizeRefactoringDebt:
         data = _make_refactoring()
         result = normalize_refactoring_debt(data)
         assert result.name == "refactoring_debt"
-        assert result.weight == 0.10
+        assert result.weight == 0.05
 
     def test_formula_display_shows_weighted_calculation(self):
         data = _make_refactoring(
@@ -436,9 +436,9 @@ class TestNormalizeAll:
             "code_smell_detector": CodeSmellDetectorData(**_load_fixture("code-smell-detector-data.json")),
             "test_design_reviewer": TestDesignReviewerData(**_load_fixture("test-design-reviewer-data.json")),
             "cognitive_load_analyzer": CognitiveLoadAnalyzerData(**_load_fixture("cognitive-load-analyzer-data.json")),
-            "ddd_architect": DDDArchitectData(**_load_fixture("ddd-architect-data.json")),
-            "legacy_code_expert": LegacyCodeExpertData(**_load_fixture("legacy-code-expert-data.json")),
-            "refactoring_expert": RefactoringExpertData(**_load_fixture("refactoring-expert-data.json")),
+            "ddd_assessor": DDDArchitectData(**_load_fixture("ddd-architect-data.json")),
+            "legacy_code_analyzer": LegacyCodeExpertData(**_load_fixture("legacy-code-expert-data.json")),
+            "refactoring_advisor": RefactoringExpertData(**_load_fixture("refactoring-expert-data.json")),
         }
         scores = normalize_all(results)
         assert len(scores) == 6
@@ -469,9 +469,9 @@ class TestNormalizeAll:
             "code_smell_detector": CodeSmellDetectorData(**_load_fixture("code-smell-detector-data.json")),
             "test_design_reviewer": TestDesignReviewerData(**_load_fixture("test-design-reviewer-data.json")),
             "cognitive_load_analyzer": CognitiveLoadAnalyzerData(**_load_fixture("cognitive-load-analyzer-data.json")),
-            "ddd_architect": DDDArchitectData(**_load_fixture("ddd-architect-data.json")),
-            "legacy_code_expert": LegacyCodeExpertData(**_load_fixture("legacy-code-expert-data.json")),
-            "refactoring_expert": RefactoringExpertData(**_load_fixture("refactoring-expert-data.json")),
+            "ddd_assessor": DDDArchitectData(**_load_fixture("ddd-architect-data.json")),
+            "legacy_code_analyzer": LegacyCodeExpertData(**_load_fixture("legacy-code-expert-data.json")),
+            "refactoring_advisor": RefactoringExpertData(**_load_fixture("refactoring-expert-data.json")),
         }
         scores = normalize_all(results)
         names = {score.name for score in scores}
@@ -489,9 +489,9 @@ class TestNormalizeAll:
             "code_smell_detector": CodeSmellDetectorData(**_load_fixture("code-smell-detector-data.json")),
             "test_design_reviewer": TestDesignReviewerData(**_load_fixture("test-design-reviewer-data.json")),
             "cognitive_load_analyzer": CognitiveLoadAnalyzerData(**_load_fixture("cognitive-load-analyzer-data.json")),
-            "ddd_architect": DDDArchitectData(**_load_fixture("ddd-architect-data.json")),
-            "legacy_code_expert": LegacyCodeExpertData(**_load_fixture("legacy-code-expert-data.json")),
-            "refactoring_expert": RefactoringExpertData(**_load_fixture("refactoring-expert-data.json")),
+            "ddd_assessor": DDDArchitectData(**_load_fixture("ddd-architect-data.json")),
+            "legacy_code_analyzer": LegacyCodeExpertData(**_load_fixture("legacy-code-expert-data.json")),
+            "refactoring_advisor": RefactoringExpertData(**_load_fixture("refactoring-expert-data.json")),
         }
         scores = normalize_all(results)
         for score in scores:
@@ -499,18 +499,19 @@ class TestNormalizeAll:
                 f"{score.name} score {score.normalized_score} out of [0, 10]"
             )
 
-    def test_weights_sum_to_one(self):
+    def test_original_six_weights_sum(self):
+        """Original 6 agents should sum to 0.36 (rest distributed across 15 generic agents)."""
         results = {
             "code_smell_detector": CodeSmellDetectorData(**_load_fixture("code-smell-detector-data.json")),
             "test_design_reviewer": TestDesignReviewerData(**_load_fixture("test-design-reviewer-data.json")),
             "cognitive_load_analyzer": CognitiveLoadAnalyzerData(**_load_fixture("cognitive-load-analyzer-data.json")),
-            "ddd_architect": DDDArchitectData(**_load_fixture("ddd-architect-data.json")),
-            "legacy_code_expert": LegacyCodeExpertData(**_load_fixture("legacy-code-expert-data.json")),
-            "refactoring_expert": RefactoringExpertData(**_load_fixture("refactoring-expert-data.json")),
+            "ddd_assessor": DDDArchitectData(**_load_fixture("ddd-architect-data.json")),
+            "legacy_code_analyzer": LegacyCodeExpertData(**_load_fixture("legacy-code-expert-data.json")),
+            "refactoring_advisor": RefactoringExpertData(**_load_fixture("refactoring-expert-data.json")),
         }
         scores = normalize_all(results)
         total_weight = sum(score.weight for score in scores)
-        assert total_weight == pytest.approx(1.0)
+        assert total_weight == pytest.approx(0.36)
 
 
 # ---------------------------------------------------------------------------

@@ -26,6 +26,7 @@ from src.report.models import (
     CognitiveLoadAnalyzerData,
     DDDArchitectData,
     DimensionScore,
+    GenericAgentData,
     LegacyCodeExpertData,
     ProjectMetadata,
     RefactoringExpertData,
@@ -44,12 +45,30 @@ from src.report.risk import assess_all_risks
 # ---------------------------------------------------------------------------
 
 AGENT_FILE_MAP: dict[str, str] = {
+    # Original 6 agents
     "code_smell_detector": "code-smell-detector-data.json",
     "test_design_reviewer": "test-design-reviewer-data.json",
     "cognitive_load_analyzer": "cognitive-load-analyzer-data.json",
-    "ddd_architect": "ddd-architect-data.json",
-    "legacy_code_expert": "legacy-code-expert-data.json",
-    "refactoring_expert": "refactoring-expert-data.json",
+    "ddd_assessor": "ddd-architect-data.json",
+    "legacy_code_analyzer": "legacy-code-expert-data.json",
+    "refactoring_advisor": "refactoring-expert-data.json",
+    # 15 generic agents
+    "security_assessor": "security-assessor-data.json",
+    "error_handling_reviewer": "error-handling-reviewer-data.json",
+    "api_design_reviewer": "api-design-reviewer-data.json",
+    "dependency_auditor": "dependency-auditor-data.json",
+    "concurrency_analyzer": "concurrency-analyzer-data.json",
+    "documentation_reviewer": "documentation-reviewer-data.json",
+    "dead_code_detector": "dead-code-detector-data.json",
+    "devops_evaluator": "devops-evaluator-data.json",
+    "ownership_analyzer": "ownership-analyzer-data.json",
+    "consistency_checker": "consistency-checker-data.json",
+    "data_layer_reviewer": "data-layer-reviewer-data.json",
+    "observability_assessor": "observability-assessor-data.json",
+    # 3 additional agents
+    "system_auditor": "system-auditor-data.json",
+    "accessibility_assessor": "accessibility-assessor-data.json",
+    "system_explorer": "system-explorer-data.json",
 }
 
 # ---------------------------------------------------------------------------
@@ -57,12 +76,30 @@ AGENT_FILE_MAP: dict[str, str] = {
 # ---------------------------------------------------------------------------
 
 AGENT_MODEL_MAP: dict[str, type] = {
+    # Original 6 agents (specific models)
     "code_smell_detector": CodeSmellDetectorData,
     "test_design_reviewer": TestDesignReviewerData,
     "cognitive_load_analyzer": CognitiveLoadAnalyzerData,
-    "ddd_architect": DDDArchitectData,
-    "legacy_code_expert": LegacyCodeExpertData,
-    "refactoring_expert": RefactoringExpertData,
+    "ddd_assessor": DDDArchitectData,
+    "legacy_code_analyzer": LegacyCodeExpertData,
+    "refactoring_advisor": RefactoringExpertData,
+    # 15 generic agents
+    "security_assessor": GenericAgentData,
+    "error_handling_reviewer": GenericAgentData,
+    "api_design_reviewer": GenericAgentData,
+    "dependency_auditor": GenericAgentData,
+    "concurrency_analyzer": GenericAgentData,
+    "documentation_reviewer": GenericAgentData,
+    "dead_code_detector": GenericAgentData,
+    "devops_evaluator": GenericAgentData,
+    "ownership_analyzer": GenericAgentData,
+    "consistency_checker": GenericAgentData,
+    "data_layer_reviewer": GenericAgentData,
+    "observability_assessor": GenericAgentData,
+    # 3 additional agents (generic model)
+    "system_auditor": GenericAgentData,
+    "accessibility_assessor": GenericAgentData,
+    "system_explorer": GenericAgentData,
 }
 
 # ---------------------------------------------------------------------------
@@ -70,12 +107,30 @@ AGENT_MODEL_MAP: dict[str, type] = {
 # ---------------------------------------------------------------------------
 
 _DIMENSION_DISPLAY_NAMES: dict[str, str] = {
+    # Original 6
     "code_quality": "Code Quality",
     "test_design": "Test Design",
     "cognitive_load": "Cognitive Load",
     "ddd_compliance": "DDD Compliance",
     "legacy_safety": "Legacy Safety",
     "refactoring_debt": "Refactoring Debt",
+    # 15 generic dimensions
+    "security": "Security Posture",
+    "error_handling": "Error Handling",
+    "api_design": "API Design",
+    "dependency_health": "Dependency Health",
+    "concurrency": "Concurrency Safety",
+    "documentation": "Documentation",
+    "dead_code": "Dead Code",
+    "devops_maturity": "DevOps Maturity",
+    "code_ownership": "Code Ownership",
+    "consistency": "Consistency",
+    "data_layer": "Data Layer",
+    "observability": "Observability",
+    # 3 additional dimensions
+    "compliance": "Compliance",
+    "accessibility": "Accessibility",
+    "system_comprehensibility": "System Comprehensibility",
 }
 
 

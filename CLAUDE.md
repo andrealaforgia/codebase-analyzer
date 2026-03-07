@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Claude Code orchestrator agent that launches 6 analysis subagents against a target codebase, normalizes scores, and generates a self-contained HTML report with interactive visualizations.
+Claude Code orchestrator agent that launches 21 analysis subagents against a target codebase, normalizes scores, and generates a self-contained HTML report with interactive visualizations.
 
 ## Development Paradigm
 
@@ -37,7 +37,7 @@ See `docs/feature/codebase-analyzer/design/roadmap.md` for implementation roadma
 ## Project Structure
 
 ```
-codebase-analyzer.md    # Orchestrator agent definition
+alf-codebase-analyzer.md # Orchestrator agent definition
 src/report/             # Python pipeline modules
 src/templates/          # Jinja2 HTML templates
 src/assets/             # Minified JS libraries for inlining

@@ -1,9 +1,13 @@
 """Pydantic models for agent JSON output contracts and unified report data.
 
-Each of the 6 analysis agents produces a JSON report conforming to one of these
-frozen models.  Validation enforces required fields, types, and value ranges so
-that invalid agent output is rejected with clear error messages identifying the
-offending field.
+Each of the 21 analysis agents produces a JSON report conforming to one of
+these frozen models.  Validation enforces required fields, types, and value
+ranges so that invalid agent output is rejected with clear error messages
+identifying the offending field.
+
+The original 6 agents have specific models.  The 15 additional agents share a
+common GenericAgentData model (overall_score 0-100, risk_distribution,
+recommendations).
 
 Report-level models (ProjectMetadata, DimensionScore, RiskCategory, ReportData)
 define the unified data shape the report generator receives.  Pure functions
@@ -283,6 +287,48 @@ class RefactoringExpertData(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# 7-18. GenericAgentData (shared by 12 new agents)
+# ---------------------------------------------------------------------------
+
+
+class GenericRiskDistribution(BaseModel):
+    """Counts of issues by severity for the new agent types."""
+
+    model_config = ConfigDict(frozen=True)
+
+    critical: int = Field(ge=0, default=0)
+    high: int = Field(ge=0, default=0)
+    medium: int = Field(ge=0, default=0)
+    low: int = Field(ge=0, default=0)
+
+
+class GenericRecommendation(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    priority: int = Field(ge=1)
+    title: str
+    description: str
+    effort: str = "medium"
+
+
+class GenericAgentData(BaseModel):
+    """Common contract for the 15 generic analysis agents.
+
+    All generic agents report an overall_score (0-100), a risk_distribution
+    with critical/high/medium/low counts, and a list of recommendations.
+    Additional agent-specific fields are captured by the extra='allow' config
+    and stored in agent_results for the HTML drill-down.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="allow")
+
+    overall_score: float = Field(ge=0, le=100)
+    summary: str = ""
+    risk_distribution: GenericRiskDistribution = GenericRiskDistribution()
+    recommendations: list[GenericRecommendation] = []
+
+
+# ---------------------------------------------------------------------------
 # Report-level models
 # ---------------------------------------------------------------------------
 
@@ -332,7 +378,7 @@ class RiskCategory(BaseModel):
 class ReportData(BaseModel):
     """Unified report data structure passed to the report generator.
 
-    Contains metadata, 0-6 dimension scores (some may be missing),
+    Contains metadata, 0-21 dimension scores (some may be missing),
     an overall health score (0-100), a human-readable rating, business risk
     assessments, and raw agent results for detailed drill-down.
     """

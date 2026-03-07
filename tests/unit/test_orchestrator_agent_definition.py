@@ -1,9 +1,9 @@
 """Content-validation tests for the orchestrator agent markdown definition.
 
-These tests verify that codebase-analyzer.md exists and contains all required
+These tests verify that alf-codebase-analyzer.md exists and contains all required
 sections for the orchestrator to function correctly:
 - Target directory parameter acceptance
-- All 6 subagent references
+- All 21 subagent references
 - Parallel execution instructions for independent agents
 - Sequential dependency (refactoring waits for code-smell-detector)
 - Python pipeline invocation
@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-AGENT_DEFINITION_PATH = Path(__file__).parent.parent.parent / "codebase-analyzer.md"
+AGENT_DEFINITION_PATH = Path(__file__).parent.parent.parent / "alf-codebase-analyzer.md"
 
 
 @pytest.fixture
@@ -30,12 +30,12 @@ def agent_content() -> str:
 class TestOrchestratorAgentDefinitionExists:
     def test_agent_markdown_file_exists(self):
         assert AGENT_DEFINITION_PATH.exists(), (
-            "codebase-analyzer.md must exist at project root"
+            "alf-codebase-analyzer.md must exist at project root"
         )
 
     def test_agent_file_is_not_empty(self, agent_content: str):
         assert len(agent_content.strip()) > 0, (
-            "codebase-analyzer.md must not be empty"
+            "alf-codebase-analyzer.md must not be empty"
         )
 
 
@@ -64,15 +64,30 @@ class TestOptionalConfiguration:
 
 
 class TestSubagentReferences:
-    """Verify all 6 subagent types are referenced in the agent definition."""
+    """Verify all 21 subagent types are referenced in the agent definition."""
 
     EXPECTED_AGENT_TYPES = [
         "alf-code-smell-detector",
-        "test-design-reviewer",
-        "cognitive-load-analyzer",
-        "alf-ddd-architect",
-        "alf-legacy-code-expert",
-        "alf-refactoring-expert",
+        "alf-test-design-reviewer",
+        "alf-cognitive-load-analyzer",
+        "alf-ddd-assessor",
+        "alf-legacy-code-analyzer",
+        "alf-refactoring-advisor",
+        "alf-security-assessor",
+        "alf-error-handling-reviewer",
+        "alf-api-design-reviewer",
+        "alf-dependency-auditor",
+        "alf-concurrency-analyzer",
+        "alf-documentation-reviewer",
+        "alf-dead-code-detector",
+        "alf-devops-evaluator",
+        "alf-ownership-analyzer",
+        "alf-consistency-checker",
+        "alf-data-layer-reviewer",
+        "alf-observability-assessor",
+        "alf-system-auditor",
+        "alf-accessibility-assessor",
+        "alf-system-explorer",
     ]
 
     @pytest.mark.parametrize("agent_type", EXPECTED_AGENT_TYPES)
@@ -82,12 +97,15 @@ class TestSubagentReferences:
         )
 
     EXPECTED_AGENT_PATHS = [
-        "code-smell-detector/code-smell-detector.md",
-        "test-design-reviewer/test-design-reviewer.md",
-        "cognitive-load-analyzer/cognitive-load-analyzer.md",
-        "domain-driven-design/ddd-architect-agent.md",
-        "legacy-code-expert/legacy-code-expert.md",
-        "refactoring-expert/refactoring-expert.md",
+        "alf-code-smell-detector/alf-code-smell-detector.md",
+        "alf-test-design-reviewer/alf-test-design-reviewer.md",
+        "alf-cognitive-load-analyzer/alf-cognitive-load-analyzer.md",
+        "alf-ddd-assessor/alf-ddd-assessor.md",
+        "alf-legacy-code-analyzer/alf-legacy-code-analyzer.md",
+        "alf-refactoring-advisor/alf-refactoring-advisor.md",
+        "alf-system-auditor/alf-system-auditor.md",
+        "alf-accessibility-assessor/alf-accessibility-assessor.md",
+        "alf-system-explorer/alf-system-explorer.md",
     ]
 
     @pytest.mark.parametrize("agent_path", EXPECTED_AGENT_PATHS)
@@ -103,6 +121,21 @@ class TestSubagentReferences:
         "ddd-architect-data.json",
         "legacy-code-expert-data.json",
         "refactoring-expert-data.json",
+        "security-assessor-data.json",
+        "error-handling-reviewer-data.json",
+        "api-design-reviewer-data.json",
+        "dependency-auditor-data.json",
+        "concurrency-analyzer-data.json",
+        "documentation-reviewer-data.json",
+        "dead-code-detector-data.json",
+        "devops-evaluator-data.json",
+        "ownership-analyzer-data.json",
+        "consistency-checker-data.json",
+        "data-layer-reviewer-data.json",
+        "observability-assessor-data.json",
+        "system-auditor-data.json",
+        "accessibility-assessor-data.json",
+        "system-explorer-data.json",
     ]
 
     @pytest.mark.parametrize("json_file", EXPECTED_JSON_FILES)
@@ -118,10 +151,10 @@ class TestParallelExecution:
             "Agent must document parallel execution of independent agents"
         )
 
-    def test_five_agents_run_in_parallel(self, agent_content: str):
+    def test_twenty_agents_run_in_parallel(self, agent_content: str):
         content_lower = agent_content.lower()
-        assert ("5" in agent_content or "five" in content_lower) and "parallel" in content_lower, (
-            "Agent must specify that 5 agents run in parallel"
+        assert "20" in agent_content and "parallel" in content_lower, (
+            "Agent must specify that 20 agents run in parallel"
         )
 
 

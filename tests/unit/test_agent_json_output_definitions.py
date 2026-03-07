@@ -37,32 +37,32 @@ def _load_agent_content(relative_path: str) -> str:
 
 @pytest.fixture
 def code_smell_detector_content() -> str:
-    return _load_agent_content("code-smell-detector/code-smell-detector.md")
+    return _load_agent_content("alf-code-smell-detector/alf-code-smell-detector.md")
 
 
 @pytest.fixture
 def test_design_reviewer_content() -> str:
-    return _load_agent_content("test-design-reviewer/test-design-reviewer.md")
+    return _load_agent_content("alf-test-design-reviewer/alf-test-design-reviewer.md")
 
 
 @pytest.fixture
 def cognitive_load_analyzer_content() -> str:
-    return _load_agent_content("cognitive-load-analyzer/cognitive-load-analyzer.md")
+    return _load_agent_content("alf-cognitive-load-analyzer/alf-cognitive-load-analyzer.md")
 
 
 @pytest.fixture
 def ddd_architect_content() -> str:
-    return _load_agent_content("domain-driven-design/ddd-architect-agent.md")
+    return _load_agent_content("alf-ddd-assessor/alf-ddd-assessor.md")
 
 
 @pytest.fixture
 def legacy_code_expert_content() -> str:
-    return _load_agent_content("legacy-code-expert/legacy-code-expert.md")
+    return _load_agent_content("alf-legacy-code-analyzer/alf-legacy-code-analyzer.md")
 
 
 @pytest.fixture
 def refactoring_expert_content() -> str:
-    return _load_agent_content("refactoring-expert/refactoring-expert.md")
+    return _load_agent_content("alf-refactoring-advisor/alf-refactoring-advisor.md")
 
 
 # ---------------------------------------------------------------------------

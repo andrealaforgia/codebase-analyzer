@@ -3,6 +3,9 @@
 Each function produces a human-readable string showing the normalization
 formula with actual values substituted -- used in the score derivation panel.
 
+Covers the original 6 agents (specific formulas) and the 15 generic agents
+(generic 0-100 to 0-10 conversion).
+
 All functions are pure: no side effects, no I/O.
 """
 
@@ -141,3 +144,50 @@ def refactoring_debt_explanation(score: float) -> str:
         f"Refactoring debt is {level} (score {score:.1f}/10). "
         f"Based on weighted count of high, medium, and low risk recommendations."
     )
+
+
+# ---------------------------------------------------------------------------
+# Generic formula for new agents (0-100 -> 0-10 conversion)
+# ---------------------------------------------------------------------------
+
+# Display names and descriptions for the 15 generic dimensions
+_GENERIC_DIMENSION_INFO: dict[str, tuple[str, str]] = {
+    "security": ("Security Posture", "OWASP compliance, secret detection, input validation, and dependency CVEs"),
+    "error_handling": ("Error Handling", "exception handling consistency, resilience patterns, and failure mode coverage"),
+    "api_design": ("API Design", "contract consistency, versioning, error uniformity, and pagination patterns"),
+    "dependency_health": ("Dependency Health", "outdated/abandoned packages, license compliance, and supply chain risk"),
+    "concurrency": ("Concurrency Safety", "thread safety, race conditions, async correctness, and N+1 queries"),
+    "documentation": ("Documentation", "doc coverage vs complexity, README accuracy, ADRs, and onboarding path"),
+    "dead_code": ("Dead Code", "unreachable code, unused exports, orphaned files, and zombie dependencies"),
+    "devops_maturity": ("DevOps Maturity", "CI/CD quality, build reproducibility, deployment strategy, and containerization"),
+    "code_ownership": ("Code Ownership", "bus factor, hotspot analysis, knowledge concentration, and team coupling"),
+    "consistency": ("Consistency", "naming conventions, project structure, import ordering, and pattern adherence"),
+    "data_layer": ("Data Layer", "migration hygiene, ORM usage, transaction boundaries, and SQL safety"),
+    "observability": ("Observability", "logging coverage, tracing instrumentation, metrics emission, and health checks"),
+    "compliance": ("Compliance", "regulatory framework adherence, audit controls, data protection, and security governance"),
+    "accessibility": ("Accessibility", "WCAG conformance, disability impact coverage, semantic HTML, and assistive technology support"),
+    "system_comprehensibility": ("System Comprehensibility", "documentation coverage, architecture clarity, hotspot concentration, and onboarding readiness"),
+}
+
+
+def generic_formula_display(dimension_key: str, raw_score: float, normalized: float) -> str:
+    """Show 0-100 to 0-10 conversion formula."""
+    display_name = _GENERIC_DIMENSION_INFO.get(dimension_key, (dimension_key, ""))[0]
+    return f"{display_name}: {raw_score:.0f}/100 -> {normalized:.2f}/10"
+
+
+def generic_explanation(dimension_key: str, normalized: float) -> str:
+    """Plain-language explanation for a generic dimension."""
+    info = _GENERIC_DIMENSION_INFO.get(dimension_key, (dimension_key, dimension_key))
+    display_name, description = info
+
+    if normalized >= 8.0:
+        quality = "excellent"
+    elif normalized >= 6.0:
+        quality = "good"
+    elif normalized >= 4.0:
+        quality = "moderate"
+    else:
+        quality = "poor"
+
+    return f"{display_name} is {quality} ({normalized:.1f}/10). Measures {description}."

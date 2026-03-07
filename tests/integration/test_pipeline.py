@@ -36,17 +36,18 @@ FIXTURES_DIR = Path(__file__).resolve().parent.parent / "acceptance" / "codebase
 class TestLoadAgentResults:
     """Tests for reading and validating agent JSON files from a directory."""
 
-    def test_loads_all_six_agents_from_fixtures_directory(self):
+    def test_loads_all_six_original_agents_from_fixtures_directory(self):
         results, messages = load_agent_results(str(FIXTURES_DIR))
         assert len(results) == 6
-        assert len(messages) == 0
+        # 15 messages for the 15 generic agents whose fixtures don't exist
+        assert len(messages) == 15
 
     def test_returns_empty_dict_and_messages_for_empty_directory(self, tmp_path):
         empty_dir = tmp_path / "empty"
         empty_dir.mkdir()
         results, messages = load_agent_results(str(empty_dir))
         assert results == {}
-        assert len(messages) == 6  # one message per missing agent
+        assert len(messages) == 21  # one message per missing agent
 
     def test_returns_partial_results_when_some_files_missing(self, tmp_path):
         partial_dir = tmp_path / "partial"
@@ -60,7 +61,7 @@ class TestLoadAgentResults:
         assert len(results) == 2
         assert "code_smell_detector" in results
         assert "test_design_reviewer" in results
-        assert len(messages) == 4  # four missing agents
+        assert len(messages) == 19  # 19 missing agents (21 total - 2 loaded)
 
     def test_captures_validation_error_for_malformed_json(self, tmp_path):
         malformed_dir = tmp_path / "malformed"
@@ -88,12 +89,29 @@ class TestLoadAgentResults:
 
     def test_all_agent_keys_present_in_file_map(self):
         expected_keys = {
+            # Original 6
             "code_smell_detector",
             "test_design_reviewer",
             "cognitive_load_analyzer",
-            "ddd_architect",
-            "legacy_code_expert",
-            "refactoring_expert",
+            "ddd_assessor",
+            "legacy_code_analyzer",
+            "refactoring_advisor",
+            # 15 generic agents
+            "security_assessor",
+            "error_handling_reviewer",
+            "api_design_reviewer",
+            "dependency_auditor",
+            "concurrency_analyzer",
+            "documentation_reviewer",
+            "dead_code_detector",
+            "devops_evaluator",
+            "ownership_analyzer",
+            "consistency_checker",
+            "data_layer_reviewer",
+            "observability_assessor",
+            "system_auditor",
+            "accessibility_assessor",
+            "system_explorer",
         }
         assert set(AGENT_FILE_MAP.keys()) == expected_keys
 
