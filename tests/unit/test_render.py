@@ -126,13 +126,19 @@ class TestRenderReportInjectsData:
 
     def test_injected_data_is_valid_json(self):
         html = render_report(_make_report_data())
-        # Extract JSON between "const reportData = " and ";"
-        marker_start = "const reportData = "
+        # Extract JSON from the CSP-compliant <script type="application/json"> element
+        import html as html_module
+        marker_start = '<script type="application/json" id="report-data">'
+        marker_end = "</script>"
         start_idx = html.index(marker_start) + len(marker_start)
-        end_idx = html.index(";", start_idx)
-        json_str = html[start_idx:end_idx]
+        end_idx = html.index(marker_end, start_idx)
+        json_str = html_module.unescape(html[start_idx:end_idx])
         data = json.loads(json_str)
         assert data["metadata"]["project_name"] == "test-project"
+
+    def test_report_data_parsed_via_json_parse(self):
+        html = render_report(_make_report_data())
+        assert "JSON.parse(document.getElementById('report-data').textContent)" in html
 
 
 # ---------------------------------------------------------------------------

@@ -27,7 +27,7 @@ def _create_jinja_environment() -> Environment:
     """Create a Jinja2 environment pointing to the templates directory."""
     return Environment(
         loader=FileSystemLoader(str(_TEMPLATES_DIR)),
-        autoescape=False,
+        autoescape=True,
     )
 
 

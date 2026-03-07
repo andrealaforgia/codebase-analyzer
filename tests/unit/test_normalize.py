@@ -11,6 +11,7 @@ Tests also validate the normalize_all orchestrator function.
 """
 
 import json
+import math
 from pathlib import Path
 
 import pytest
@@ -25,6 +26,7 @@ from src.report.models import (
     TestDesignReviewerData,
 )
 from src.report.normalize import (
+    _clamp,
     normalize_code_quality,
     normalize_cognitive_load,
     normalize_ddd_compliance,
@@ -509,3 +511,24 @@ class TestNormalizeAll:
         scores = normalize_all(results)
         total_weight = sum(score.weight for score in scores)
         assert total_weight == pytest.approx(1.0)
+
+
+# ---------------------------------------------------------------------------
+# 8. _clamp: NaN/Inf guard (D4)
+# ---------------------------------------------------------------------------
+
+
+class TestClampNonFiniteGuard:
+    """_clamp must reject NaN and Inf with a ValueError."""
+
+    def test_nan_raises_value_error(self):
+        with pytest.raises(ValueError, match="non-finite"):
+            _clamp(float("nan"))
+
+    def test_positive_inf_raises_value_error(self):
+        with pytest.raises(ValueError, match="non-finite"):
+            _clamp(float("inf"))
+
+    def test_negative_inf_raises_value_error(self):
+        with pytest.raises(ValueError, match="non-finite"):
+            _clamp(float("-inf"))

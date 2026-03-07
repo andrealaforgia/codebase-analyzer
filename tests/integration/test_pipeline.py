@@ -219,3 +219,35 @@ class TestGenerateReport:
         exit_code = generate_report(str(FIXTURES_DIR), output_path)
         assert exit_code == 0
         assert Path(output_path).exists()
+
+
+# ---------------------------------------------------------------------------
+# Risk assessments in rendered HTML (D2)
+# ---------------------------------------------------------------------------
+
+
+class TestRiskAssessmentsInRenderedHtml:
+    """Verify that risk assessments appear in the final rendered HTML output."""
+
+    def test_risk_section_headings_appear_in_rendered_html(self, tmp_path):
+        output_path = str(tmp_path / "report.html")
+        exit_code = generate_report(str(FIXTURES_DIR), output_path)
+        assert exit_code == 0
+        content = Path(output_path).read_text()
+        assert "Delivery Velocity Risk" in content
+        assert "Incident Risk" in content
+        assert "Onboarding Risk" in content
+
+    def test_severity_badges_appear_in_rendered_html(self, tmp_path):
+        output_path = str(tmp_path / "report.html")
+        exit_code = generate_report(str(FIXTURES_DIR), output_path)
+        assert exit_code == 0
+        content = Path(output_path).read_text()
+        # At least one of HIGH, MODERATE, LOW severity badges should be present
+        severity_badges_found = [
+            badge for badge in ("HIGH", "MODERATE", "LOW")
+            if badge in content
+        ]
+        assert len(severity_badges_found) >= 1, (
+            "Expected at least one severity badge (HIGH, MODERATE, LOW) in rendered HTML"
+        )

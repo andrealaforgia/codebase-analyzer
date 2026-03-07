@@ -17,6 +17,7 @@ Dimension weights (from architecture):
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable
 from typing import Any
 
@@ -203,5 +204,10 @@ def normalize_all(results: dict[str, Any]) -> list[DimensionScore]:
 
 
 def _clamp(value: float, low: float = 0.0, high: float = 10.0) -> float:
-    """Clamp a value to [low, high] range."""
+    """Clamp a value to [low, high] range.
+
+    Raises ValueError for non-finite values (NaN, Inf, -Inf).
+    """
+    if math.isnan(value) or math.isinf(value):
+        raise ValueError(f"Cannot clamp non-finite value: {value}")
     return max(low, min(high, value))

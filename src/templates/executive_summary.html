@@ -179,9 +179,9 @@
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof Chart === 'undefined') return;
 
-    var gaugeConfig = {{ gauge_config_json }};
-    var radarConfig = {{ radar_config_json }};
-    var barsConfig = {{ bars_config_json }};
+    var gaugeConfig = {{ gauge_config_json|safe }};
+    var radarConfig = {{ radar_config_json|safe }};
+    var barsConfig = {{ bars_config_json|safe }};
 
     new Chart(document.getElementById('gaugeChart'), gaugeConfig);
     new Chart(document.getElementById('radarChart'), radarConfig);

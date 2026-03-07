@@ -51,11 +51,18 @@ def test_design_explanation(farley_index: float) -> str:
 
 
 def cognitive_load_formula_display(cli_score: int, normalized: float) -> str:
-    """Show cognitive load inversion formula with values."""
-    return (
-        f"10 - ({cli_score} / 100) = {normalized:.2f} "
-        f"-> clamped to [0, 10] = {normalized:.2f}"
-    )
+    """Show cognitive load inversion formula with values.
+
+    Shows the intermediate (unclamped) value and only mentions clamping
+    when it actually changed the result.
+    """
+    intermediate = 10.0 - cli_score / 100.0
+    if intermediate != normalized:  # clamping triggered
+        return (
+            f"10 - ({cli_score} / 100) = {intermediate:.2f} "
+            f"-> clamped to [0, 10] = {normalized:.2f}"
+        )
+    return f"10 - ({cli_score} / 100) = {normalized:.2f}"
 
 
 def cognitive_load_explanation(cli_score: int, normalized: float) -> str:

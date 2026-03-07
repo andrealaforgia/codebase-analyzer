@@ -369,8 +369,9 @@
 <!-- D3_JS_PLACEHOLDER -->
 <!-- MERMAID_JS_PLACEHOLDER -->
 
+<script type="application/json" id="report-data">{{ report_data_json }}</script>
 <script>
-const reportData = {{ report_data_json }};
+const reportData = JSON.parse(document.getElementById('report-data').textContent);
 </script>
 
 </body>
