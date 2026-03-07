@@ -19,15 +19,31 @@ from pydantic import ValidationError
 
 from src.report.models import (
     CodeSmellDetectorData,
+    CodeSmellTopIssue,
+    CognitiveDimension,
     CognitiveLoadAnalyzerData,
+    CognitiveWorstOffender,
+    DDDAntiPattern,
     DDDArchitectData,
     DimensionScore,
+    ImplementationSequenceItem,
     LegacyCodeExpertData,
+    ModuleAtRisk,
+    PatternMaturity,
+    PriorityMatrixItem,
     ProjectMetadata,
+    PropertyScores,
     RefactoringExpertData,
     ReportData,
     RiskCategory,
+    RiskDistribution,
+    SeamAvailability,
+    SeverityDistribution,
+    SolidCompliance,
+    SubdomainDistribution,
+    TautologyCounts,
     TestDesignReviewerData,
+    TestDesignWorstOffender,
     compute_overall_score,
     derive_rating,
 )
@@ -853,3 +869,451 @@ class TestDeriveRating:
 
     def test_excellent_at_hundred(self):
         assert derive_rating(100.0) == "Excellent"
+
+
+# ---------------------------------------------------------------------------
+# 13. Sub-model immutability (frozen=True on every nested model)
+# ---------------------------------------------------------------------------
+
+
+class TestSubModelImmutability:
+    """Verify that all sub-models are frozen (mutation raises ValidationError)."""
+
+    def test_severity_distribution_is_frozen(self):
+        model = SeverityDistribution(high=1, medium=2, low=3)
+        with pytest.raises(ValidationError):
+            model.high = 99
+
+    def test_risk_distribution_is_frozen(self):
+        model = RiskDistribution(low=1, medium=2, high=3)
+        with pytest.raises(ValidationError):
+            model.low = 99
+
+    def test_code_smell_top_issue_is_frozen(self):
+        model = CodeSmellTopIssue(file="a.py", issue="bad", severity="high", category="Bloaters")
+        with pytest.raises(ValidationError):
+            model.file = "other.py"
+
+    def test_solid_compliance_is_frozen(self):
+        model = SolidCompliance(SRP=7.0, OCP=7.0, LSP=7.0, ISP=7.0, DIP=7.0)
+        with pytest.raises(ValidationError):
+            model.SRP = 1.0
+
+    def test_property_scores_is_frozen(self):
+        model = PropertyScores(static=7.0, llm=7.0, blended=7.0)
+        with pytest.raises(ValidationError):
+            model.static = 1.0
+
+    def test_tautology_counts_is_frozen(self):
+        model = TautologyCounts(mock_tautology=0, mock_only=0, trivial=0, framework=0)
+        with pytest.raises(ValidationError):
+            model.mock_tautology = 99
+
+    def test_test_design_worst_offender_is_frozen(self):
+        model = TestDesignWorstOffender(file="test.py", score=4.0, issues=["bad"])
+        with pytest.raises(ValidationError):
+            model.file = "other.py"
+
+    def test_cognitive_dimension_is_frozen(self):
+        model = CognitiveDimension(raw="medium", normalized=5.5, weighted=1.1)
+        with pytest.raises(ValidationError):
+            model.raw = "high"
+
+    def test_cognitive_worst_offender_is_frozen(self):
+        model = CognitiveWorstOffender(file="a.py", score=50.0, primary_dimension="Structural")
+        with pytest.raises(ValidationError):
+            model.file = "other.py"
+
+    def test_subdomain_distribution_is_frozen(self):
+        model = SubdomainDistribution(core=2, supporting=1, generic=1)
+        with pytest.raises(ValidationError):
+            model.core = 99
+
+    def test_ddd_anti_pattern_is_frozen(self):
+        model = DDDAntiPattern(name="Bad", severity="High", location="module.py")
+        with pytest.raises(ValidationError):
+            model.name = "Other"
+
+    def test_pattern_maturity_is_frozen(self):
+        model = PatternMaturity(strategic=6.0, tactical=7.0, language=6.5, boundaries=5.5, events=7.5)
+        with pytest.raises(ValidationError):
+            model.strategic = 1.0
+
+    def test_seam_availability_is_frozen(self):
+        model = SeamAvailability(object=12, link=5, preprocessing=3)
+        with pytest.raises(ValidationError):
+            model.object = 99
+
+    def test_module_at_risk_is_frozen(self):
+        model = ModuleAtRisk(file="a.py", risk="High", dependencies=5, seams=2)
+        with pytest.raises(ValidationError):
+            model.file = "other.py"
+
+    def test_priority_matrix_item_is_frozen(self):
+        model = PriorityMatrixItem(item="Do X", impact="High", complexity="Low", risk="Medium")
+        with pytest.raises(ValidationError):
+            model.item = "Do Y"
+
+    def test_implementation_sequence_item_is_frozen(self):
+        model = ImplementationSequenceItem(order=1, item="Do X", rationale="Because")
+        with pytest.raises(ValidationError):
+            model.order = 2
+
+
+# ---------------------------------------------------------------------------
+# 14. Boundary value tests for field constraints (ge/le boundaries)
+# ---------------------------------------------------------------------------
+
+
+class TestSeverityDistributionBoundaries:
+    """SeverityDistribution: high(ge=0), medium(ge=0), low(ge=0)."""
+
+    @pytest.mark.parametrize("field", ["high", "medium", "low"])
+    def test_zero_is_accepted(self, field):
+        kwargs = {"high": 1, "medium": 1, "low": 1}
+        kwargs[field] = 0
+        model = SeverityDistribution(**kwargs)
+        assert getattr(model, field) == 0
+
+    @pytest.mark.parametrize("field", ["high", "medium", "low"])
+    def test_negative_one_is_rejected(self, field):
+        kwargs = {"high": 1, "medium": 1, "low": 1}
+        kwargs[field] = -1
+        with pytest.raises(ValidationError, match=field):
+            SeverityDistribution(**kwargs)
+
+
+class TestRiskDistributionBoundaries:
+    """RiskDistribution: low(ge=0), medium(ge=0), high(ge=0)."""
+
+    @pytest.mark.parametrize("field", ["low", "medium", "high"])
+    def test_zero_is_accepted(self, field):
+        kwargs = {"low": 1, "medium": 1, "high": 1}
+        kwargs[field] = 0
+        model = RiskDistribution(**kwargs)
+        assert getattr(model, field) == 0
+
+    @pytest.mark.parametrize("field", ["low", "medium", "high"])
+    def test_negative_one_is_rejected(self, field):
+        kwargs = {"low": 1, "medium": 1, "high": 1}
+        kwargs[field] = -1
+        with pytest.raises(ValidationError, match=field):
+            RiskDistribution(**kwargs)
+
+
+class TestSolidComplianceBoundaries:
+    """SolidCompliance: SRP/OCP/LSP/ISP/DIP each ge=0, le=10."""
+
+    @pytest.mark.parametrize("field", ["SRP", "OCP", "LSP", "ISP", "DIP"])
+    def test_zero_is_accepted(self, field):
+        kwargs = {"SRP": 5.0, "OCP": 5.0, "LSP": 5.0, "ISP": 5.0, "DIP": 5.0}
+        kwargs[field] = 0.0
+        model = SolidCompliance(**kwargs)
+        assert getattr(model, field) == 0.0
+
+    @pytest.mark.parametrize("field", ["SRP", "OCP", "LSP", "ISP", "DIP"])
+    def test_ten_is_accepted(self, field):
+        kwargs = {"SRP": 5.0, "OCP": 5.0, "LSP": 5.0, "ISP": 5.0, "DIP": 5.0}
+        kwargs[field] = 10.0
+        model = SolidCompliance(**kwargs)
+        assert getattr(model, field) == 10.0
+
+    @pytest.mark.parametrize("field", ["SRP", "OCP", "LSP", "ISP", "DIP"])
+    def test_negative_is_rejected(self, field):
+        kwargs = {"SRP": 5.0, "OCP": 5.0, "LSP": 5.0, "ISP": 5.0, "DIP": 5.0}
+        kwargs[field] = -0.1
+        with pytest.raises(ValidationError, match=field):
+            SolidCompliance(**kwargs)
+
+    @pytest.mark.parametrize("field", ["SRP", "OCP", "LSP", "ISP", "DIP"])
+    def test_above_ten_is_rejected(self, field):
+        kwargs = {"SRP": 5.0, "OCP": 5.0, "LSP": 5.0, "ISP": 5.0, "DIP": 5.0}
+        kwargs[field] = 10.1
+        with pytest.raises(ValidationError, match=field):
+            SolidCompliance(**kwargs)
+
+
+class TestCodeSmellDetectorDataBoundaries:
+    """CodeSmellDetectorData: total_issues(ge=0)."""
+
+    def test_total_issues_zero_is_accepted(self):
+        data = _load_fixture("code-smell-detector-data.json")
+        data["total_issues"] = 0
+        model = CodeSmellDetectorData(**data)
+        assert model.total_issues == 0
+
+
+class TestTestDesignReviewerDataBoundaries:
+    """TestDesignReviewerData: farley_index(ge=0, le=10)."""
+
+    def test_farley_index_zero_is_accepted(self):
+        data = _load_fixture("test-design-reviewer-data.json")
+        data["farley_index"] = 0.0
+        model = TestDesignReviewerData(**data)
+        assert model.farley_index == 0.0
+
+    def test_farley_index_ten_is_accepted(self):
+        data = _load_fixture("test-design-reviewer-data.json")
+        data["farley_index"] = 10.0
+        model = TestDesignReviewerData(**data)
+        assert model.farley_index == 10.0
+
+
+class TestTautologyCountsBoundaries:
+    """TautologyCounts: mock_tautology/mock_only/trivial/framework each ge=0."""
+
+    @pytest.mark.parametrize("field", ["mock_tautology", "mock_only", "trivial", "framework"])
+    def test_zero_is_accepted(self, field):
+        kwargs = {"mock_tautology": 1, "mock_only": 1, "trivial": 1, "framework": 1}
+        kwargs[field] = 0
+        model = TautologyCounts(**kwargs)
+        assert getattr(model, field) == 0
+
+    @pytest.mark.parametrize("field", ["mock_tautology", "mock_only", "trivial", "framework"])
+    def test_negative_one_is_rejected(self, field):
+        kwargs = {"mock_tautology": 1, "mock_only": 1, "trivial": 1, "framework": 1}
+        kwargs[field] = -1
+        with pytest.raises(ValidationError, match=field):
+            TautologyCounts(**kwargs)
+
+
+class TestCognitiveLoadAnalyzerDataBoundaries:
+    """CognitiveLoadAnalyzerData: cli_score(ge=0, le=1000)."""
+
+    def test_cli_score_zero_is_accepted(self):
+        data = _load_fixture("cognitive-load-analyzer-data.json")
+        data["cli_score"] = 0
+        model = CognitiveLoadAnalyzerData(**data)
+        assert model.cli_score == 0
+
+    def test_cli_score_thousand_is_accepted(self):
+        data = _load_fixture("cognitive-load-analyzer-data.json")
+        data["cli_score"] = 1000
+        model = CognitiveLoadAnalyzerData(**data)
+        assert model.cli_score == 1000
+
+
+class TestDDDArchitectDataBoundaries:
+    """DDDArchitectData: overall_score(ge=0,le=10), bounded_context_count(ge=0)."""
+
+    def test_overall_score_zero_is_accepted(self):
+        data = _load_fixture("ddd-architect-data.json")
+        data["overall_score"] = 0.0
+        model = DDDArchitectData(**data)
+        assert model.overall_score == 0.0
+
+    def test_overall_score_ten_is_accepted(self):
+        data = _load_fixture("ddd-architect-data.json")
+        data["overall_score"] = 10.0
+        model = DDDArchitectData(**data)
+        assert model.overall_score == 10.0
+
+    def test_bounded_context_count_zero_is_accepted(self):
+        data = _load_fixture("ddd-architect-data.json")
+        data["bounded_context_count"] = 0
+        model = DDDArchitectData(**data)
+        assert model.bounded_context_count == 0
+
+    def test_bounded_context_count_negative_is_rejected(self):
+        data = _load_fixture("ddd-architect-data.json")
+        data["bounded_context_count"] = -1
+        with pytest.raises(ValidationError, match="bounded_context_count"):
+            DDDArchitectData(**data)
+
+
+class TestSubdomainDistributionBoundaries:
+    """SubdomainDistribution: core/supporting/generic each ge=0."""
+
+    @pytest.mark.parametrize("field", ["core", "supporting", "generic"])
+    def test_zero_is_accepted(self, field):
+        kwargs = {"core": 1, "supporting": 1, "generic": 1}
+        kwargs[field] = 0
+        model = SubdomainDistribution(**kwargs)
+        assert getattr(model, field) == 0
+
+    @pytest.mark.parametrize("field", ["core", "supporting", "generic"])
+    def test_negative_one_is_rejected(self, field):
+        kwargs = {"core": 1, "supporting": 1, "generic": 1}
+        kwargs[field] = -1
+        with pytest.raises(ValidationError, match=field):
+            SubdomainDistribution(**kwargs)
+
+
+class TestPatternMaturityBoundaries:
+    """PatternMaturity: strategic/tactical/language/boundaries/events each ge=0, le=10."""
+
+    @pytest.mark.parametrize("field", ["strategic", "tactical", "language", "boundaries", "events"])
+    def test_zero_is_accepted(self, field):
+        kwargs = {"strategic": 5.0, "tactical": 5.0, "language": 5.0, "boundaries": 5.0, "events": 5.0}
+        kwargs[field] = 0.0
+        model = PatternMaturity(**kwargs)
+        assert getattr(model, field) == 0.0
+
+    @pytest.mark.parametrize("field", ["strategic", "tactical", "language", "boundaries", "events"])
+    def test_ten_is_accepted(self, field):
+        kwargs = {"strategic": 5.0, "tactical": 5.0, "language": 5.0, "boundaries": 5.0, "events": 5.0}
+        kwargs[field] = 10.0
+        model = PatternMaturity(**kwargs)
+        assert getattr(model, field) == 10.0
+
+    @pytest.mark.parametrize("field", ["strategic", "tactical", "language", "boundaries", "events"])
+    def test_negative_is_rejected(self, field):
+        kwargs = {"strategic": 5.0, "tactical": 5.0, "language": 5.0, "boundaries": 5.0, "events": 5.0}
+        kwargs[field] = -0.1
+        with pytest.raises(ValidationError, match=field):
+            PatternMaturity(**kwargs)
+
+    @pytest.mark.parametrize("field", ["strategic", "tactical", "language", "boundaries", "events"])
+    def test_above_ten_is_rejected(self, field):
+        kwargs = {"strategic": 5.0, "tactical": 5.0, "language": 5.0, "boundaries": 5.0, "events": 5.0}
+        kwargs[field] = 10.1
+        with pytest.raises(ValidationError, match=field):
+            PatternMaturity(**kwargs)
+
+
+class TestLegacyCodeExpertDataBoundaries:
+    """LegacyCodeExpertData: overall_score(ge=0,le=10), dependency_count(ge=0), testability_score(ge=0,le=1)."""
+
+    def test_overall_score_zero_is_accepted(self):
+        data = _load_fixture("legacy-code-expert-data.json")
+        data["overall_score"] = 0.0
+        model = LegacyCodeExpertData(**data)
+        assert model.overall_score == 0.0
+
+    def test_overall_score_ten_is_accepted(self):
+        data = _load_fixture("legacy-code-expert-data.json")
+        data["overall_score"] = 10.0
+        model = LegacyCodeExpertData(**data)
+        assert model.overall_score == 10.0
+
+    def test_dependency_count_zero_is_accepted(self):
+        data = _load_fixture("legacy-code-expert-data.json")
+        data["dependency_count"] = 0
+        model = LegacyCodeExpertData(**data)
+        assert model.dependency_count == 0
+
+    def test_dependency_count_negative_is_rejected(self):
+        data = _load_fixture("legacy-code-expert-data.json")
+        data["dependency_count"] = -1
+        with pytest.raises(ValidationError, match="dependency_count"):
+            LegacyCodeExpertData(**data)
+
+    def test_testability_score_zero_is_accepted(self):
+        data = _load_fixture("legacy-code-expert-data.json")
+        data["testability_score"] = 0.0
+        model = LegacyCodeExpertData(**data)
+        assert model.testability_score == 0.0
+
+    def test_testability_score_one_is_accepted(self):
+        data = _load_fixture("legacy-code-expert-data.json")
+        data["testability_score"] = 1.0
+        model = LegacyCodeExpertData(**data)
+        assert model.testability_score == 1.0
+
+
+class TestSeamAvailabilityBoundaries:
+    """SeamAvailability: object/link/preprocessing each ge=0."""
+
+    @pytest.mark.parametrize("field", ["object", "link", "preprocessing"])
+    def test_zero_is_accepted(self, field):
+        kwargs = {"object": 1, "link": 1, "preprocessing": 1}
+        kwargs[field] = 0
+        model = SeamAvailability(**kwargs)
+        assert getattr(model, field) == 0
+
+    @pytest.mark.parametrize("field", ["object", "link", "preprocessing"])
+    def test_negative_one_is_rejected(self, field):
+        kwargs = {"object": 1, "link": 1, "preprocessing": 1}
+        kwargs[field] = -1
+        with pytest.raises(ValidationError, match=field):
+            SeamAvailability(**kwargs)
+
+
+class TestModuleAtRiskBoundaries:
+    """ModuleAtRisk: dependencies(ge=0), seams(ge=0)."""
+
+    @pytest.mark.parametrize("field", ["dependencies", "seams"])
+    def test_zero_is_accepted(self, field):
+        kwargs = {"file": "a.py", "risk": "High", "dependencies": 5, "seams": 2}
+        kwargs[field] = 0
+        model = ModuleAtRisk(**kwargs)
+        assert getattr(model, field) == 0
+
+    @pytest.mark.parametrize("field", ["dependencies", "seams"])
+    def test_negative_one_is_rejected(self, field):
+        kwargs = {"file": "a.py", "risk": "High", "dependencies": 5, "seams": 2}
+        kwargs[field] = -1
+        with pytest.raises(ValidationError, match=field):
+            ModuleAtRisk(**kwargs)
+
+
+class TestRefactoringExpertDataBoundaries:
+    """RefactoringExpertData: total_recommendations(ge=0)."""
+
+    def test_total_recommendations_zero_is_accepted(self):
+        data = _load_fixture("refactoring-expert-data.json")
+        data["total_recommendations"] = 0
+        model = RefactoringExpertData(**data)
+        assert model.total_recommendations == 0
+
+
+class TestImplementationSequenceItemBoundaries:
+    """ImplementationSequenceItem: order(ge=1)."""
+
+    def test_order_one_is_accepted(self):
+        model = ImplementationSequenceItem(order=1, item="Do X", rationale="Because")
+        assert model.order == 1
+
+    def test_order_zero_is_rejected(self):
+        with pytest.raises(ValidationError, match="order"):
+            ImplementationSequenceItem(order=0, item="Do X", rationale="Because")
+
+
+class TestDimensionScoreBoundaries:
+    """DimensionScore: normalized_score(ge=0,le=10), weight(ge=0,le=1)."""
+
+    def test_normalized_score_zero_is_accepted(self):
+        model = DimensionScore(
+            name="x", raw_score=0.0, normalized_score=0.0, weight=0.2,
+            formula_display="f", explanation="e",
+        )
+        assert model.normalized_score == 0.0
+
+    def test_normalized_score_ten_is_accepted(self):
+        model = DimensionScore(
+            name="x", raw_score=10.0, normalized_score=10.0, weight=0.2,
+            formula_display="f", explanation="e",
+        )
+        assert model.normalized_score == 10.0
+
+    def test_weight_zero_is_accepted(self):
+        model = DimensionScore(
+            name="x", raw_score=5.0, normalized_score=5.0, weight=0.0,
+            formula_display="f", explanation="e",
+        )
+        assert model.weight == 0.0
+
+    def test_weight_one_is_accepted(self):
+        model = DimensionScore(
+            name="x", raw_score=5.0, normalized_score=5.0, weight=1.0,
+            formula_display="f", explanation="e",
+        )
+        assert model.weight == 1.0
+
+
+class TestReportDataBoundaries:
+    """ReportData: overall_score(ge=0, le=100)."""
+
+    def test_overall_score_zero_is_accepted(self):
+        model = ReportData(
+            metadata=_make_metadata(), dimensions=[], overall_score=0.0,
+            rating="Critical", risk_assessments=[], agent_results={},
+        )
+        assert model.overall_score == 0.0
+
+    def test_overall_score_hundred_is_accepted(self):
+        model = ReportData(
+            metadata=_make_metadata(), dimensions=[], overall_score=100.0,
+            rating="Excellent", risk_assessments=[], agent_results={},
+        )
+        assert model.overall_score == 100.0
