@@ -1,0 +1,20 @@
+{
+  "cli_score": 312,
+  "rating": "Moderate",
+  "dimensions": {
+    "Structural Complexity": {"raw": "medium", "normalized": 5.5, "weighted": 1.1},
+    "Naming Quality": {"raw": "good", "normalized": 7.5, "weighted": 1.13},
+    "Coupling Density": {"raw": "moderate", "normalized": 6.0, "weighted": 0.9},
+    "Abstraction Depth": {"raw": "moderate", "normalized": 5.8, "weighted": 0.58},
+    "Code Duplication": {"raw": "low", "normalized": 8.0, "weighted": 0.8},
+    "File Length": {"raw": "moderate", "normalized": 6.2, "weighted": 0.62},
+    "Parameter Complexity": {"raw": "good", "normalized": 7.8, "weighted": 0.78},
+    "Comment Density": {"raw": "sparse", "normalized": 4.5, "weighted": 0.45}
+  },
+  "interaction_penalty": 0.15,
+  "worst_offenders": [
+    {"file": "src/services/payment_processor.py", "score": 78.5, "primary_dimension": "Structural Complexity"},
+    {"file": "src/core/orchestrator.py", "score": 65.2, "primary_dimension": "Coupling Density"},
+    {"file": "src/models/order.py", "score": 58.1, "primary_dimension": "Abstraction Depth"}
+  ]
+}

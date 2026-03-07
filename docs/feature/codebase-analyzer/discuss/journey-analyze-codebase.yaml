@@ -1,0 +1,347 @@
+journey:
+  name: "Analyze Client Codebase"
+  goal: "Run multi-agent analysis on a client codebase, produce a professional HTML report with undeniable evidence of quality issues, and present findings to client leadership"
+  persona: "Andrea Laforgia, Senior Software Consultant"
+
+  emotional_arc:
+    start: "Purposeful, efficient -- knows what needs to be done"
+    middle: "Critical, analytical -- scrutinizing scores for defensibility"
+    end: "Authoritative, empowered -- undeniable evidence overcomes client denial"
+
+  trigger: "Client engagement requires codebase quality assessment"
+
+  success_criteria:
+    - "Report produced without manual agent-by-agent synthesis"
+    - "Every score in the report is traceable to raw data"
+    - "Client leadership shifts from denial to action planning"
+    - "Report works both as presentation aid and standalone document"
+
+steps:
+  - id: 1
+    name: "Configure and Launch Analysis"
+    command: |
+      codebase-analyzer analyze <target-dir>
+        [--project-name <name>]
+        [--output <path>]
+        [--agents all|agent1,agent2,...]
+
+    tui_mockup: |
+      +-- Codebase Analyzer v1.0 ------------------------------------+
+      | Project:    ${project_name}                                   |
+      | Target:     ${target_dir}                                     |
+      | Files:      ${file_count} source files detected               |
+      | Language:   ${primary_language} (primary)                     |
+      | Agents:     ${agent_selection}                                |
+      | Output:     ${output_path}                                    |
+      +---------------------------------------------------------------+
+      | Confirm analysis? [Y/n]                                       |
+      +---------------------------------------------------------------+
+
+    shared_artifacts:
+      - name: "project_name"
+        source: "CLI --project-name argument or directory basename"
+        displayed_as: "${project_name}"
+        consumers:
+          - "CLI launch confirmation"
+          - "Report header"
+          - "Report title tag"
+
+      - name: "target_dir"
+        source: "CLI positional argument"
+        displayed_as: "${target_dir}"
+        consumers:
+          - "CLI launch confirmation"
+          - "Report metadata section"
+          - "Agent invocations"
+
+      - name: "output_path"
+        source: "CLI --output argument or default ./report.html"
+        displayed_as: "${output_path}"
+        consumers:
+          - "CLI launch confirmation"
+          - "CLI completion message"
+          - "File system write target"
+
+      - name: "file_count"
+        source: "Filesystem scan of target_dir"
+        displayed_as: "${file_count}"
+        consumers:
+          - "CLI launch confirmation"
+          - "Report metadata section"
+
+      - name: "primary_language"
+        source: "File extension analysis of target_dir"
+        displayed_as: "${primary_language}"
+        consumers:
+          - "CLI launch confirmation"
+          - "Report metadata section"
+
+    emotional_state:
+      entry: "Purposeful -- knows what needs to be done"
+      exit: "Relieved -- tool has validated the target and is running"
+
+    integration_checkpoint: |
+      Target directory exists and contains source files.
+      At least one agent is selected.
+      Output path is writable.
+
+    gherkin: |
+      Scenario: Launch analysis with default settings
+        Given Andrea has a local copy of the client codebase at "/projects/acme-platform"
+        When Andrea runs "codebase-analyzer analyze /projects/acme-platform"
+        Then the tool detects 847 source files and Java as primary language
+        And displays project metadata for confirmation
+        And prompts Andrea to confirm before starting
+
+      Scenario: Launch analysis with custom project name
+        Given Andrea wants the report titled "Acme Corp Platform"
+        When Andrea runs the analyze command with --project-name "Acme Corp Platform"
+        Then the report header will display "Acme Corp Platform"
+        And the HTML title will contain "Acme Corp Platform"
+
+  - id: 2
+    name: "Monitor Agent Execution"
+    command: "(automatic after confirmation in step 1)"
+
+    tui_mockup: |
+      +-- Analyzing ${project_name} ----------------------------------+
+      |                                                                |
+      | [1/6] Code Smell Detection     ████████████████████ done      |
+      |       Grade: ${smell_grade} | ${smell_count} issues found     |
+      |                                                                |
+      | [2/6] Test Design Review        ████████████████████ done      |
+      |       Farley Index: ${farley_index}/10                        |
+      |                                                                |
+      | [3/6] Cognitive Load Analysis   ██████████░░░░░░░░░░ ${pct}%  |
+      |       Analyzing ${current_activity}...                        |
+      |                                                                |
+      | [4/6] DDD Architecture Review   ░░░░░░░░░░░░░░░░░░░░ queued  |
+      | [5/6] Legacy Code Assessment    ░░░░░░░░░░░░░░░░░░░░ queued  |
+      | [6/6] Refactoring Analysis      ░░░░░░░░░░░░░░░░░░░░ queued  |
+      |                                                                |
+      | Elapsed: ${elapsed} | Estimated remaining: ${remaining}       |
+      +----------------------------------------------------------------+
+
+    shared_artifacts:
+      - name: "agent_results"
+        source: "Each agent's structured JSON output"
+        displayed_as: "Per-agent scores during progress"
+        consumers:
+          - "Progress display (preview scores)"
+          - "Result normalizer"
+          - "Report generator"
+          - "Score derivation sections"
+
+      - name: "agent_status"
+        source: "Orchestrator tracking"
+        displayed_as: "done/running/queued/FAILED"
+        consumers:
+          - "Progress display"
+          - "Error handling logic"
+          - "Report completeness indicator"
+
+    emotional_state:
+      entry: "Trusting -- the tool is handling the tedious work"
+      exit: "Anticipatory -- scores are appearing, curious about final picture"
+
+    integration_checkpoint: |
+      Each completed agent has produced valid structured output.
+      Agent dependencies respected (refactoring-expert runs after code-smell-detector).
+      Failed agents are recorded with error details.
+
+    gherkin: |
+      Scenario: All agents complete successfully
+        Given Andrea has launched analysis on the Acme Corp codebase
+        When all 6 agents complete their analysis
+        Then each agent displays its primary score upon completion
+        And the total elapsed time is displayed
+        And the report generation phase begins automatically
+
+      Scenario: One agent fails during execution
+        Given analysis is running and 3 agents have completed
+        When the DDD Architecture agent times out after 10 minutes
+        Then the tool displays the failure reason
+        And prompts Andrea to continue with remaining agents or abort
+        And if she continues, the report marks DDD as "Not Available"
+
+      Scenario: Progress visibility during long analysis
+        Given the Cognitive Load agent is analyzing a 1200-file codebase
+        When Andrea checks the terminal during execution
+        Then she sees which agent is currently running
+        And what activity it is performing
+        And an estimated time remaining
+
+  - id: 3
+    name: "Review Report and Validate Scores"
+    command: "(report opens automatically or Andrea opens the HTML file)"
+
+    tui_mockup: |
+      +-- Report Generation Complete ----------------------------------+
+      |                                                                 |
+      |  Report saved to: ${output_path}                               |
+      |                                                                 |
+      |  Quick Summary:                                                |
+      |    Overall Health:    ${overall_score}/100 (${overall_rating}) |
+      |    Weakest Dimension: ${weakest_dimension} (${weakest_score})  |
+      |    Strongest:         ${strongest_dimension} (${strongest_score})|
+      |    Agents Completed:  ${completed_count}/6                     |
+      |                                                                 |
+      |  Open report in browser? [Y/n]                                 |
+      +----------------------------------------------------------------+
+
+    shared_artifacts:
+      - name: "overall_score"
+        source: "Weighted average of normalized dimension scores"
+        displayed_as: "${overall_score}/100"
+        consumers:
+          - "CLI completion summary"
+          - "Report executive summary header"
+          - "Report overall health gauge"
+
+      - name: "dimension_scores"
+        source: "Normalized agent scores (0-10 scale)"
+        displayed_as: "Per-dimension bars and radar chart"
+        consumers:
+          - "Executive summary dimension bars"
+          - "Master radar chart"
+          - "Per-dimension detail sections"
+          - "Score derivation panels"
+          - "Business risk calculation"
+
+      - name: "business_risk_assessments"
+        source: "Derived from dimension scores using risk model"
+        displayed_as: "Risk level badges (HIGH/MODERATE/LOW)"
+        consumers:
+          - "Executive summary business risk section"
+          - "Report header risk indicators"
+
+    emotional_state:
+      entry: "Critical, scrutinizing -- are these scores defensible?"
+      exit: "Satisfied -- the report accurately reflects the codebase and every score is traceable"
+
+    integration_checkpoint: |
+      Overall score matches weighted formula applied to dimension scores.
+      Each dimension score traces to raw agent data via documented formula.
+      Business risk levels are consistent with dimension scores.
+      No dimension shows "N/A" without explanation.
+
+    gherkin: |
+      Scenario: Report executive summary communicates health at a glance
+        Given the analysis of Acme Corp Platform has completed
+        When Andrea opens the generated HTML report
+        Then she sees an overall health score of 58/100 rated "Needs Attention"
+        And a 6-axis radar chart showing the quality shape
+        And each dimension listed with its score and a plain-language rating
+        And the weakest dimension is highlighted with risk annotation
+
+      Scenario: Score derivation is fully transparent
+        Given Andrea sees a Refactoring Debt score of 3.0/10
+        When she clicks into the score derivation section
+        Then she sees the raw data (14 recommendations: 2 high, 7 medium, 5 low)
+        And the normalization formula with actual values substituted
+        And a plain-language explanation of what the score means
+
+      Scenario: Business risk section translates to executive language
+        Given the report is open showing business risk summary
+        When Andrea reviews the risk categories
+        Then she sees Delivery Velocity Risk rated HIGH with estimated impact
+        And Incident Risk rated MODERATE with contributing factors
+        And Onboarding Risk rated MODERATE with estimated ramp-up time
+        And each risk category links to the underlying dimension evidence
+
+  - id: 4
+    name: "Present to Client Leadership"
+    command: "(human-driven -- Andrea presents the report in a meeting)"
+
+    tui_mockup: |
+      +-- Report Navigation During Presentation ----------------------+
+      |                                                                |
+      | [Executive Summary] [Code Quality] [Test Design]              |
+      | [Cognitive Load] [DDD] [Legacy Risk] [Refactoring]           |
+      |                                                                |
+      | Section navigation via sticky tab bar at top of report.       |
+      | Each section has collapse/expand for progressive disclosure.  |
+      | Print mode available for PDF handout.                         |
+      |                                                                |
+      +----------------------------------------------------------------+
+      |                                                                |
+      | "Denial-Proof" Drill-Down Pattern:                            |
+      |                                                                |
+      | Level 1: Overall Score (58/100 -- Needs Attention)            |
+      |   --> "That seems subjective"                                 |
+      |                                                                |
+      | Level 2: Dimension Breakdown (Refactoring Debt: 3/10)        |
+      |   --> "14 items doesn't sound like a lot"                     |
+      |                                                                |
+      | Level 3: Score Derivation (formula + raw data)                |
+      |   --> "But are these really problems?"                        |
+      |                                                                |
+      | Level 4: Specific Evidence (file-level findings)              |
+      |   --> Conversation shifts to "what do we do about it?"        |
+      |                                                                |
+      +----------------------------------------------------------------+
+
+    shared_artifacts:
+      - name: "report_html"
+        source: "Generated HTML file at ${output_path}"
+        displayed_as: "Interactive dashboard in browser"
+        consumers:
+          - "Live presentation (screen-share)"
+          - "Client self-exploration (standalone document)"
+          - "PDF export (print mode)"
+
+    emotional_state:
+      entry: "Authoritative -- has undeniable evidence"
+      peak_tension: "Client leadership pushes back or minimizes"
+      resolution: "Drill-down evidence makes denial untenable"
+      exit: "Empowered -- conversation shifts from denial to action"
+
+    integration_checkpoint: |
+      Report navigation works smoothly for live presentation.
+      Drill-down from summary to evidence works at every level.
+      Print mode produces clean output for handouts.
+      All interactive elements work without internet (CDN loaded or inlined).
+
+    gherkin: |
+      Scenario: Progressive drill-down overcomes client pushback
+        Given Andrea is presenting the report to Acme Corp leadership
+        And the VP of Engineering questions the overall score
+        When Andrea clicks from executive summary to dimension breakdown
+        And then into score derivation for Refactoring Debt
+        And then into specific file-level findings
+        Then each level provides more detailed evidence
+        And the findings include specific file names, line counts, and metrics
+        And the evidence is traceable from summary score to source code
+
+      Scenario: Report works as standalone document after meeting
+        Given Andrea has presented the report to client leadership
+        When the CTO opens the report HTML file on their own computer
+        Then all charts and visualizations render correctly
+        And navigation between sections works
+        And score derivation drill-downs are accessible
+        And no external dependencies prevent the report from loading
+
+      Scenario: Report supports dual technical and executive audiences
+        Given the Acme Corp CTO shares the report with their engineering leads
+        When the engineering leads explore the deep-dive sections
+        Then they find specific file-level findings with code metrics
+        And severity ratings for each issue
+        And prioritized recommendations for remediation
+
+integration_validation:
+  shared_artifact_consistency:
+    - artifact: "project_name"
+      must_match_across: [1, 3, 4]
+      failure_message: "Project name in CLI, report header, and report title must match"
+
+    - artifact: "dimension_scores"
+      must_match_across: [2, 3]
+      failure_message: "Preview scores shown during execution must match final report scores"
+
+    - artifact: "overall_score"
+      must_match_across: [3, 4]
+      failure_message: "Overall score in CLI summary and report must match"
+
+    - artifact: "output_path"
+      must_match_across: [1, 3]
+      failure_message: "Configured output path must match actual file location"

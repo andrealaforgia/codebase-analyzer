@@ -1,0 +1,218 @@
+{
+  "roadmap": {
+    "project_id": "codebase-analyzer",
+    "created_at": "2026-03-07T02:50:31Z",
+    "total_steps": 10,
+    "phases": 5
+  },
+  "phases": [
+    {
+      "id": "01",
+      "name": "Foundation -- Agent Contracts and Data Models",
+      "steps": [
+        {
+          "id": "01-01",
+          "name": "Agent JSON output contracts and Pydantic models",
+          "description": "Define Pydantic models for all 6 agent JSON schemas. These are the integration contracts that agents must conform to and the normalizer consumes.",
+          "criteria": [
+            "Each of the 6 agents has a corresponding Pydantic model",
+            "Models validate required fields, types, and value ranges",
+            "Invalid JSON produces clear error identifying the agent and field",
+            "Models are frozen (immutable)"
+          ],
+          "files_to_modify": [
+            "src/report/models.py"
+          ]
+        },
+        {
+          "id": "01-02",
+          "name": "Report data structures and overall score model",
+          "description": "Define the unified report data structure: metadata, normalized dimension scores, overall health score, rating, business risk assessments.",
+          "criteria": [
+            "Report data model includes metadata, dimension scores, overall score, risk assessments",
+            "Overall score computable from dimension scores via documented formula",
+            "Rating derivable from overall score via threshold lookup",
+            "Missing dimensions representable (optional fields)"
+          ],
+          "files_to_modify": [
+            "src/report/models.py"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "Score Pipeline -- Normalization and Risk",
+      "steps": [
+        {
+          "id": "02-01",
+          "name": "Score normalization functions",
+          "description": "Pure functions that transform raw agent JSON (validated by models) into normalized 0-10 dimension scores using the documented formulas.",
+          "criteria": [
+            "Each agent type has a normalization function",
+            "Output scores are in 0-10 range",
+            "Applying the formula to known input reproduces expected output",
+            "Functions return both the normalized score and the formula-with-values string"
+          ],
+          "files_to_modify": [
+            "src/report/normalize.py",
+            "src/report/formulas.py"
+          ]
+        },
+        {
+          "id": "02-02",
+          "name": "Overall health score and business risk derivation",
+          "description": "Pure functions for weighted health score calculation (0-100) and business risk category assessment (Delivery Velocity, Incident, Onboarding).",
+          "criteria": [
+            "Health score is weighted average of available dimensions, scaled to 0-100",
+            "Missing dimensions cause weight redistribution (not score penalty)",
+            "Each risk category produces severity level (HIGH/MODERATE/LOW) and contributing dimension citations",
+            "All-healthy dimensions produce LOW across all risk categories"
+          ],
+          "files_to_modify": [
+            "src/report/risk.py"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "03",
+      "name": "Report Generation -- Templates and Rendering",
+      "steps": [
+        {
+          "id": "03-01",
+          "name": "HTML base template with inlined libraries and navigation",
+          "description": "Jinja2 base template containing the HTML skeleton, inlined Chart.js/D3.js/Mermaid.js, sticky navigation bar, print CSS, and report data injection point.",
+          "criteria": [
+            "Single HTML file renders in modern browser with no external dependencies",
+            "Sticky navigation bar with section links is present",
+            "Print CSS hides interactive elements and produces clean output",
+            "Report data injectable as const reportData = {...} in script tag"
+          ],
+          "files_to_modify": [
+            "src/templates/base.html",
+            "src/assets/chart.min.js",
+            "src/assets/d3.min.js",
+            "src/assets/mermaid.min.js"
+          ]
+        },
+        {
+          "id": "03-02",
+          "name": "Executive summary section with radar chart and gauges",
+          "description": "Jinja2 template section rendering overall health gauge, 6-axis radar chart, dimension score bars, weakest dimension callout, and business risk summary.",
+          "criteria": [
+            "Overall score displayed as gauge with rating label",
+            "Radar chart renders with correct axis labels and data points",
+            "Weakest dimension visually highlighted with risk annotation",
+            "Business risk categories displayed with severity badges",
+            "Executive summary scannable in under 2 minutes on standard display"
+          ],
+          "files_to_modify": [
+            "src/templates/executive_summary.html",
+            "src/report/charts.py",
+            "src/report/render.py"
+          ]
+        },
+        {
+          "id": "03-03",
+          "name": "Score derivation panels and dimension detail sections",
+          "description": "Reusable Jinja2 template for per-dimension detail: score derivation, dimension-specific charts, and findings tables. Render once per available dimension.",
+          "criteria": [
+            "Each dimension has a detail section accessible from executive summary",
+            "Score derivation shows raw data, formula with substituted values, and plain-language explanation",
+            "Applying displayed formula to displayed data reproduces displayed score",
+            "Failed dimensions show Not Available with reason",
+            "Navigation between executive summary and dimension sections is bidirectional"
+          ],
+          "files_to_modify": [
+            "src/templates/dimension_detail.html",
+            "src/templates/score_derivation.html",
+            "src/templates/appendix.html",
+            "src/report/render.py"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "04",
+      "name": "Pipeline Assembly and Orchestrator Agent",
+      "steps": [
+        {
+          "id": "04-01",
+          "name": "Python pipeline entry point",
+          "description": "Single Python function that reads agent JSON files from a directory, runs normalization, derives risks, assembles report data, renders templates, and writes the HTML file.",
+          "criteria": [
+            "Given a directory of valid agent JSON files, produces a valid HTML report",
+            "Handles partial results (missing agent files) without error",
+            "Reports which agents were available and which were missing",
+            "Exit code 0 on success, non-zero on fatal error (e.g., no agents at all)"
+          ],
+          "files_to_modify": [
+            "src/report/pipeline.py"
+          ]
+        },
+        {
+          "id": "04-02",
+          "name": "Orchestrator agent definition",
+          "description": "Claude Code agent markdown file that validates target directory, launches 6 subagents (5 parallel + 1 sequential), handles failures, then invokes the Python pipeline.",
+          "criteria": [
+            "Agent accepts target directory and optional config (project name, output path, agent selection)",
+            "Independent agents launch without waiting for each other",
+            "Refactoring agent waits for code smell detector to complete",
+            "Agent failure is caught and reported; remaining agents continue",
+            "Python pipeline invoked after all agents complete (or fail)"
+          ],
+          "files_to_modify": [
+            "codebase-analyzer.md"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "05",
+      "name": "Agent Modifications (External Dependency)",
+      "steps": [
+        {
+          "id": "05-01",
+          "name": "Add JSON output to all 6 analysis agents",
+          "description": "Modify each agent's .md definition at /Users/andrealaforgia/dev/claude-code-agents/ to write a {agent-name}-data.json file conforming to the defined contract schemas.",
+          "criteria": [
+            "Each agent writes a valid JSON file alongside its markdown report",
+            "JSON conforms to the Pydantic model for that agent",
+            "DDD and legacy agents include a self-assessed 0-10 overall score with rubric justification",
+            "Existing agent behavior and markdown output is unchanged"
+          ],
+          "files_to_modify": [
+            "/Users/andrealaforgia/dev/claude-code-agents/code-smell-detector/code-smell-detector.md",
+            "/Users/andrealaforgia/dev/claude-code-agents/test-design-reviewer/test-design-reviewer.md",
+            "/Users/andrealaforgia/dev/claude-code-agents/cognitive-load-analyzer/cognitive-load-analyzer.md",
+            "/Users/andrealaforgia/dev/claude-code-agents/domain-driven-design/ddd-architect-agent.md",
+            "/Users/andrealaforgia/dev/claude-code-agents/legacy-code-expert/legacy-code-expert.md",
+            "/Users/andrealaforgia/dev/claude-code-agents/refactoring-expert/refactoring-expert.md"
+          ]
+        }
+      ]
+    }
+  ],
+  "implementation_scope": {
+    "source_directories": [
+      "src/report/",
+      "src/templates/",
+      "src/assets/"
+    ],
+    "test_directories": [
+      "tests/unit/",
+      "tests/integration/",
+      "tests/acceptance/"
+    ],
+    "excluded_patterns": [
+      "__init__.py",
+      "__pycache__/**"
+    ]
+  },
+  "validation": {
+    "status": "pending",
+    "reviewer": "nw-software-crafter-reviewer",
+    "approved_at": "TODO"
+  }
+}

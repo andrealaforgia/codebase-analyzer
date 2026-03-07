@@ -1,0 +1,17 @@
+{
+  "overall_score": 5.5,
+  "risk_level": "Medium",
+  "dependency_count": 47,
+  "testability_score": 0.62,
+  "seam_availability": {
+    "object": 12,
+    "link": 5,
+    "preprocessing": 3
+  },
+  "modules_at_risk": [
+    {"file": "src/services/payment_processor.py", "risk": "High", "dependencies": 15, "seams": 2},
+    {"file": "src/core/orchestrator.py", "risk": "Medium", "dependencies": 12, "seams": 4},
+    {"file": "src/data/repository.py", "risk": "Medium", "dependencies": 8, "seams": 3},
+    {"file": "src/auth/authenticator.py", "risk": "Low", "dependencies": 4, "seams": 5}
+  ]
+}

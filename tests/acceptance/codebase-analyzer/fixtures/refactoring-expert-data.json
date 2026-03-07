@@ -1,0 +1,35 @@
+{
+  "total_recommendations": 14,
+  "priority_matrix": [
+    {"item": "Extract PaymentProcessor into focused services", "impact": "high", "complexity": "high", "risk": "high"},
+    {"item": "Break OrderModel Feature Envy dependency", "impact": "high", "complexity": "medium", "risk": "high"},
+    {"item": "Remove dead code in helpers module", "impact": "low", "complexity": "low", "risk": "low"},
+    {"item": "Introduce repository pattern for data access", "impact": "medium", "complexity": "medium", "risk": "medium"},
+    {"item": "Extract validation logic from controller", "impact": "medium", "complexity": "low", "risk": "medium"},
+    {"item": "Consolidate duplicate authentication checks", "impact": "medium", "complexity": "low", "risk": "medium"},
+    {"item": "Replace inheritance with composition in models", "impact": "medium", "complexity": "medium", "risk": "medium"},
+    {"item": "Introduce circuit breaker for external calls", "impact": "high", "complexity": "medium", "risk": "medium"},
+    {"item": "Extract configuration to dedicated module", "impact": "low", "complexity": "low", "risk": "low"},
+    {"item": "Add missing null checks in data layer", "impact": "medium", "complexity": "low", "risk": "medium"},
+    {"item": "Reduce cyclomatic complexity in report builder", "impact": "medium", "complexity": "medium", "risk": "medium"},
+    {"item": "Split monolithic test file into focused test modules", "impact": "low", "complexity": "low", "risk": "low"},
+    {"item": "Introduce event-driven decoupling for notifications", "impact": "medium", "complexity": "high", "risk": "low"},
+    {"item": "Remove circular dependency between orders and payments", "impact": "high", "complexity": "high", "risk": "low"}
+  ],
+  "risk_distribution": {
+    "low": 5,
+    "medium": 7,
+    "high": 2
+  },
+  "category_distribution": {
+    "Architecture": 4,
+    "Code Quality": 5,
+    "Testing": 2,
+    "Dependencies": 3
+  },
+  "implementation_sequence": [
+    {"order": 1, "item": "Remove dead code in helpers module", "rationale": "Quick win, low risk"},
+    {"order": 2, "item": "Extract validation logic from controller", "rationale": "Improves testability"},
+    {"order": 3, "item": "Extract PaymentProcessor into focused services", "rationale": "Highest impact item"}
+  ]
+}

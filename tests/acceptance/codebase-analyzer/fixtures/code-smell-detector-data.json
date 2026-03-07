@@ -1,0 +1,43 @@
+{
+  "grade": "B",
+  "total_issues": 23,
+  "severity_distribution": {
+    "high": 1,
+    "medium": 8,
+    "low": 14
+  },
+  "category_distribution": {
+    "Bloaters": 5,
+    "Dispensables": 8,
+    "Couplers": 4,
+    "Object-Orientation Abusers": 3,
+    "Change Preventers": 3
+  },
+  "solid_compliance": {
+    "SRP": 7.5,
+    "OCP": 6.0,
+    "LSP": 8.0,
+    "ISP": 7.0,
+    "DIP": 5.5
+  },
+  "top_issues": [
+    {
+      "file": "src/services/payment_processor.py",
+      "issue": "God Class - 15 responsibilities identified",
+      "severity": "high",
+      "category": "Bloaters"
+    },
+    {
+      "file": "src/models/order.py",
+      "issue": "Feature Envy - accesses 8 fields of CustomerProfile",
+      "severity": "medium",
+      "category": "Couplers"
+    },
+    {
+      "file": "src/utils/helpers.py",
+      "issue": "Dead Code - 4 unused functions",
+      "severity": "medium",
+      "category": "Dispensables"
+    }
+  ]
+}
