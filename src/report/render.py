@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -35,7 +36,7 @@ def _serialize_report_data(report_data: ReportData) -> str:
     return json.dumps(report_data.model_dump(), default=str, indent=2)
 
 
-def _serialize_chart_config(config: dict) -> str:
+def _serialize_chart_config(config: dict[str, Any]) -> str:
     """Serialize a chart config dict to a JSON string for template embedding."""
     return json.dumps(config, default=str)
 

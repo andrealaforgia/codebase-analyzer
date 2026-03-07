@@ -207,6 +207,28 @@ def build_report_data(
 # ---------------------------------------------------------------------------
 
 
+def _print_report_summary(
+    output_path: str,
+    report_data: ReportData,
+    results: dict[str, Any],
+    messages: list[str],
+) -> None:
+    """Print a human-readable summary of the generated report to stdout."""
+    available_agents = sorted(results.keys())
+    missing_agents = sorted(
+        key for key in AGENT_FILE_MAP if key not in results
+    )
+
+    print(f"Report generated: {output_path}")
+    print(f"  Overall score: {report_data.overall_score:.1f}/100 ({report_data.rating})")
+    print(f"  Available agents ({len(available_agents)}): {', '.join(available_agents)}")
+    if missing_agents:
+        print(f"  Missing agents ({len(missing_agents)}): {', '.join(missing_agents)}")
+    if messages:
+        for message in messages:
+            print(f"  Note: {message}")
+
+
 def generate_report(
     results_dir: str,
     output_path: str,
@@ -235,19 +257,6 @@ def generate_report(
     report_data = build_report_data(results, project_name, results_dir)
     html = render_report(report_data)
     write_report(html, output_path)
-
-    available_agents = sorted(results.keys())
-    missing_agents = sorted(
-        key for key in AGENT_FILE_MAP if key not in results
-    )
-
-    print(f"Report generated: {output_path}")
-    print(f"  Overall score: {report_data.overall_score:.1f}/100 ({report_data.rating})")
-    print(f"  Available agents ({len(available_agents)}): {', '.join(available_agents)}")
-    if missing_agents:
-        print(f"  Missing agents ({len(missing_agents)}): {', '.join(missing_agents)}")
-    if messages:
-        for message in messages:
-            print(f"  Note: {message}")
+    _print_report_summary(output_path, report_data, results, messages)
 
     return 0

@@ -17,6 +17,7 @@ Dimension weights (from architecture):
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 from src.report.formulas import (
@@ -172,7 +173,7 @@ def normalize_refactoring_debt(data: RefactoringExpertData) -> DimensionScore:
 # ---------------------------------------------------------------------------
 
 # Maps agent keys to their normalizer functions and expected data types
-_NORMALIZERS: dict[str, tuple[type, Any]] = {
+_NORMALIZERS: dict[str, tuple[type, Callable[..., DimensionScore]]] = {
     "code_smell_detector": (CodeSmellDetectorData, normalize_code_quality),
     "test_design_reviewer": (TestDesignReviewerData, normalize_test_design),
     "cognitive_load_analyzer": (CognitiveLoadAnalyzerData, normalize_cognitive_load),

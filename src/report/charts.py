@@ -7,6 +7,8 @@ in the report template.  No side effects, no IO imports.
 
 from __future__ import annotations
 
+from typing import Any
+
 from src.report.models import DimensionScore
 
 
@@ -53,7 +55,7 @@ def _bar_color_for_score(score: float) -> str:
 # ---------------------------------------------------------------------------
 
 
-def build_radar_config(dimensions: list[DimensionScore]) -> dict:
+def build_radar_config(dimensions: list[DimensionScore]) -> dict[str, Any]:
     """Build a Chart.js radar chart config from dimension scores.
 
     Labels come from dimension names, data from normalized_score values.
@@ -92,7 +94,7 @@ def build_radar_config(dimensions: list[DimensionScore]) -> dict:
     }
 
 
-def build_gauge_config(score: float, rating: str) -> dict:
+def build_gauge_config(score: float, rating: str) -> dict[str, Any]:
     """Build a Chart.js doughnut chart config that looks like a gauge.
 
     The filled arc represents the score (0-100), the remainder is gray.
@@ -126,7 +128,7 @@ def build_gauge_config(score: float, rating: str) -> dict:
     }
 
 
-def build_dimension_bars_config(dimensions: list[DimensionScore]) -> dict:
+def build_dimension_bars_config(dimensions: list[DimensionScore]) -> dict[str, Any]:
     """Build a Chart.js horizontal bar chart config for dimension scores.
 
     Dimensions are sorted by score ascending (weakest first).

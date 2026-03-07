@@ -10,7 +10,7 @@ Tests validate that risk assessment functions correctly:
 
 import pytest
 
-from src.report.models import DimensionScore, RiskCategory
+from src.report.models import DimensionScore
 from src.report.risk import (
     assess_all_risks,
     assess_delivery_velocity_risk,
