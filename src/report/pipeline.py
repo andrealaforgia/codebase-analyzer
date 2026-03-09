@@ -247,9 +247,11 @@ def build_report_data(
     )
     agent_results_serialized = _serialize_agent_results(results)
 
+    # Use snake_case dimensions for ReportData (template expects snake_case keys)
+    # Display names are only needed for risk assessment (already computed above)
     return ReportData(
         metadata=metadata,
-        dimensions=display_dimensions,
+        dimensions=dimensions,
         overall_score=overall_score,
         rating=rating,
         risk_assessments=risk_assessments,

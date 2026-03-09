@@ -1,0 +1,8 @@
+[cosmic-ray]
+module-path = "src/report"
+timeout = 30.0
+test-command = "python -m pytest tests/unit/ tests/integration/ -x -q"
+excluded-modules = []
+
+[cosmic-ray.distributor]
+name = "local"

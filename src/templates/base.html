@@ -89,6 +89,12 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
         }
 
+        #executive-summary {
+            max-width: 860px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
         section h2 {
             font-size: 1.4rem;
             margin-bottom: 1rem;
@@ -194,6 +200,147 @@
             font-size: 0.9rem;
         }
 
+        /* ---------- Agent details ---------- */
+        .agent-details {
+            margin-top: 1.5rem;
+            border-top: 2px solid #e0e0e0;
+            padding-top: 1.25rem;
+        }
+
+        .agent-details h4 {
+            font-size: 1.15rem;
+            color: #1a1a2e;
+            margin-bottom: 1rem;
+        }
+
+        .detail-summary {
+            background: #f8f9fa;
+            border-left: 3px solid #6c757d;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.92rem;
+            color: #495057;
+            line-height: 1.5;
+        }
+
+        .detail-block {
+            margin-bottom: 1.25rem;
+        }
+
+        .detail-block h5 {
+            font-size: 0.95rem;
+            color: #444;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.25rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+
+        .stat-chip {
+            display: inline-block;
+            font-size: 0.82rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .chip-red { background: #f8d7da; color: #721c24; }
+        .chip-orange { background: #fff3cd; color: #856404; }
+        .chip-green { background: #d4edda; color: #155724; }
+        .chip-neutral { background: #e9ecef; color: #495057; }
+
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            margin-top: 0.4rem;
+        }
+
+        .detail-table th {
+            background: #f1f3f5;
+            text-align: left;
+            padding: 0.5rem 0.6rem;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .detail-table td {
+            padding: 0.45rem 0.6rem;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+
+        .detail-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .cell-file {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 0.82rem;
+            color: #0366d6;
+            word-break: break-all;
+        }
+
+        .severity-badge {
+            display: inline-block;
+            font-size: 0.78rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 3px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .severity-critical { background: #721c24; color: #fff; }
+        .severity-high { background: #f8d7da; color: #721c24; }
+        .severity-medium { background: #fff3cd; color: #856404; }
+        .severity-low { background: #d4edda; color: #155724; }
+
+        .offender-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 0.6rem 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .offender-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.3rem;
+        }
+
+        .offender-issues {
+            margin: 0.25rem 0 0 1.2rem;
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        .offender-issues li {
+            margin-bottom: 0.15rem;
+        }
+
+        .implementation-list {
+            margin-left: 1.2rem;
+            font-size: 0.9rem;
+        }
+
+        .implementation-list li {
+            margin-bottom: 0.5rem;
+            line-height: 1.45;
+        }
+
+        .rec-description {
+            font-size: 0.84rem;
+            color: #666;
+        }
+
         /* ---------- Back to summary ---------- */
         .back-to-summary {
             margin-top: 1rem;
@@ -268,13 +415,28 @@
 </header>
 
 <nav>
-    <a href="#executive-summary">Executive Summary</a>
+    <a href="#executive-summary">Summary</a>
     <a href="#code-quality">Code Quality</a>
     <a href="#test-design">Test Design</a>
     <a href="#cognitive-load">Cognitive Load</a>
     <a href="#ddd">DDD</a>
     <a href="#legacy">Legacy</a>
     <a href="#refactoring">Refactoring</a>
+    <a href="#security">Security</a>
+    <a href="#error-handling">Error Handling</a>
+    <a href="#api-design">API Design</a>
+    <a href="#dependency-health">Dependencies</a>
+    <a href="#concurrency">Concurrency</a>
+    <a href="#documentation">Documentation</a>
+    <a href="#dead-code">Dead Code</a>
+    <a href="#devops-maturity">DevOps</a>
+    <a href="#code-ownership">Ownership</a>
+    <a href="#consistency">Consistency</a>
+    <a href="#data-layer">Data Layer</a>
+    <a href="#observability">Observability</a>
+    <a href="#compliance">Compliance</a>
+    <a href="#accessibility">Accessibility</a>
+    <a href="#system-comprehensibility">Comprehensibility</a>
     <a href="#methodology">Methodology</a>
 </nav>
 
@@ -286,71 +448,41 @@
         {% endblock %}
     </section>
 
-    <section id="code-quality">
-        <h2>Code Quality</h2>
-        {% block code_quality %}
-        {% if dimensions_by_name.get("code_quality") %}
-        {{ dimension_detail_content(dimensions_by_name["code_quality"], "code-quality") }}
-        {% else %}
-        {{ dimension_not_available("Code Quality") }}
-        {% endif %}
-        {% endblock %}
-    </section>
+    {% set dim_sections = [
+        ("code_quality", "code-quality", "Code Quality"),
+        ("test_design", "test-design", "Test Design"),
+        ("cognitive_load", "cognitive-load", "Cognitive Load"),
+        ("ddd_compliance", "ddd", "DDD Compliance"),
+        ("legacy_safety", "legacy", "Legacy Safety"),
+        ("refactoring_debt", "refactoring", "Refactoring Debt"),
+        ("security", "security", "Security Posture"),
+        ("error_handling", "error-handling", "Error Handling"),
+        ("api_design", "api-design", "API Design"),
+        ("dependency_health", "dependency-health", "Dependency Health"),
+        ("concurrency", "concurrency", "Concurrency Safety"),
+        ("documentation", "documentation", "Documentation"),
+        ("dead_code", "dead-code", "Dead Code"),
+        ("devops_maturity", "devops-maturity", "DevOps Maturity"),
+        ("code_ownership", "code-ownership", "Code Ownership"),
+        ("consistency", "consistency", "Consistency"),
+        ("data_layer", "data-layer", "Data Layer"),
+        ("observability", "observability", "Observability"),
+        ("compliance", "compliance", "Compliance"),
+        ("accessibility", "accessibility", "Accessibility"),
+        ("system_comprehensibility", "system-comprehensibility", "System Comprehensibility"),
+    ] %}
 
-    <section id="test-design">
-        <h2>Test Design</h2>
-        {% block test_design %}
-        {% if dimensions_by_name.get("test_design") %}
-        {{ dimension_detail_content(dimensions_by_name["test_design"], "test-design") }}
+    {% for dim_key, section_id, display_name in dim_sections %}
+    <section id="{{ section_id }}">
+        <h2>{{ display_name }}</h2>
+        {% if dimensions_by_name.get(dim_key) %}
+        {% set agent_key = dimension_to_agent_key.get(dim_key, "") %}
+        {{ dimension_detail_content(dimensions_by_name[dim_key], section_id, agent_key, agent_results.get(agent_key)) }}
         {% else %}
-        {{ dimension_not_available("Test Design") }}
+        {{ dimension_not_available(display_name) }}
         {% endif %}
-        {% endblock %}
     </section>
-
-    <section id="cognitive-load">
-        <h2>Cognitive Load</h2>
-        {% block cognitive_load %}
-        {% if dimensions_by_name.get("cognitive_load") %}
-        {{ dimension_detail_content(dimensions_by_name["cognitive_load"], "cognitive-load") }}
-        {% else %}
-        {{ dimension_not_available("Cognitive Load") }}
-        {% endif %}
-        {% endblock %}
-    </section>
-
-    <section id="ddd">
-        <h2>DDD</h2>
-        {% block ddd %}
-        {% if dimensions_by_name.get("ddd") %}
-        {{ dimension_detail_content(dimensions_by_name["ddd"], "ddd") }}
-        {% else %}
-        {{ dimension_not_available("DDD") }}
-        {% endif %}
-        {% endblock %}
-    </section>
-
-    <section id="legacy">
-        <h2>Legacy</h2>
-        {% block legacy %}
-        {% if dimensions_by_name.get("legacy") %}
-        {{ dimension_detail_content(dimensions_by_name["legacy"], "legacy") }}
-        {% else %}
-        {{ dimension_not_available("Legacy") }}
-        {% endif %}
-        {% endblock %}
-    </section>
-
-    <section id="refactoring">
-        <h2>Refactoring</h2>
-        {% block refactoring %}
-        {% if dimensions_by_name.get("refactoring") %}
-        {{ dimension_detail_content(dimensions_by_name["refactoring"], "refactoring") }}
-        {% else %}
-        {{ dimension_not_available("Refactoring") }}
-        {% endif %}
-        {% endblock %}
-    </section>
+    {% endfor %}
 
     <section id="methodology">
         <h2>Methodology</h2>

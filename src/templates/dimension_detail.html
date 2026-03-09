@@ -1,11 +1,16 @@
 {% from "score_derivation.html" import score_derivation_panel %}
+{% from "agent_details.html" import agent_details_section %}
 
-{% macro dimension_detail_content(dimension, section_id) %}
+{% macro dimension_detail_content(dimension, section_id, agent_key=None, agent_data=None) %}
 <div class="dimension-score-badge {% if dimension.normalized_score < 4 %}badge-red{% elif dimension.normalized_score < 6 %}badge-orange{% else %}badge-green{% endif %}">
     {{ "%.1f"|format(dimension.normalized_score) }} / 10
 </div>
 
 {{ score_derivation_panel(dimension) }}
+
+{% if agent_key and agent_data %}
+{{ agent_details_section(agent_key, agent_data) }}
+{% endif %}
 
 <p class="back-to-summary"><a href="#executive-summary">Back to Summary</a></p>
 {% endmacro %}

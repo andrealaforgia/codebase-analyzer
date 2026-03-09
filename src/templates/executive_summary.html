@@ -128,7 +128,7 @@
         <h3>Overall Health</h3>
         <canvas id="gaugeChart" width="280" height="160"></canvas>
         <div class="score-number {% if report_data.rating == 'Excellent' %}rating-excellent{% elif report_data.rating == 'Good' %}rating-good{% elif report_data.rating == 'Needs Attention' %}rating-needs-attention{% else %}rating-critical{% endif %}" style="background:none;">
-            {{ "%.1f"|format(report_data.overall_score) }}
+            {{ "%.1f"|format(report_data.overall_score) }}<span style="font-size:1.4rem;font-weight:400;opacity:0.6"> / 100</span>
         </div>
         <div>
             <span class="rating-label {% if report_data.rating == 'Excellent' %}rating-excellent{% elif report_data.rating == 'Good' %}rating-good{% elif report_data.rating == 'Needs Attention' %}rating-needs-attention{% else %}rating-critical{% endif %}">

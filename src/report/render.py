@@ -22,6 +22,31 @@ from src.report.models import DimensionScore, ReportData
 
 _TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
 
+# Maps dimension snake_case names to the agent_results keys
+_DIMENSION_TO_AGENT_KEY: dict[str, str] = {
+    "code_quality": "code_smell_detector",
+    "test_design": "test_design_reviewer",
+    "cognitive_load": "cognitive_load_analyzer",
+    "ddd_compliance": "ddd_assessor",
+    "legacy_safety": "legacy_code_analyzer",
+    "refactoring_debt": "refactoring_advisor",
+    "security": "security_assessor",
+    "error_handling": "error_handling_reviewer",
+    "api_design": "api_design_reviewer",
+    "dependency_health": "dependency_auditor",
+    "concurrency": "concurrency_analyzer",
+    "documentation": "documentation_reviewer",
+    "dead_code": "dead_code_detector",
+    "devops_maturity": "devops_evaluator",
+    "code_ownership": "ownership_analyzer",
+    "consistency": "consistency_checker",
+    "data_layer": "data_layer_reviewer",
+    "observability": "observability_assessor",
+    "compliance": "system_auditor",
+    "accessibility": "accessibility_assessor",
+    "system_comprehensibility": "system_explorer",
+}
+
 
 def _create_jinja_environment() -> Environment:
     """Create a Jinja2 environment pointing to the templates directory."""
@@ -75,6 +100,8 @@ def render_report(report_data: ReportData) -> str:
         bars_config=bars_config,
         weakest=weakest,
         dimensions_by_name=dimensions_by_name,
+        agent_results=report_data.agent_results,
+        dimension_to_agent_key=_DIMENSION_TO_AGENT_KEY,
         radar_config_json=_serialize_chart_config(radar_config),
         gauge_config_json=_serialize_chart_config(gauge_config),
         bars_config_json=_serialize_chart_config(bars_config),

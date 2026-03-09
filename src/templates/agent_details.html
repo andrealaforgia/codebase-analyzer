@@ -1,0 +1,292 @@
+{% macro agent_details_section(agent_key, agent_data) %}
+{% if agent_data %}
+<div class="agent-details">
+    <h4>Details</h4>
+
+    {# --- Summary (generic agents) --- #}
+    {% if agent_data.get("summary") and agent_data["summary"] is string and agent_data["summary"]|length > 0 %}
+    <div class="detail-summary">
+        <p>{{ agent_data["summary"] }}</p>
+    </div>
+    {% endif %}
+
+    {# === CODE SMELL DETECTOR === #}
+    {% if agent_key == "code_smell_detector" %}
+        <div class="detail-block">
+            <h5>Issue Overview</h5>
+            <div class="detail-stats">
+                <span class="stat-chip chip-neutral">Grade: <strong>{{ agent_data.get("grade", "N/A") }}</strong></span>
+                <span class="stat-chip chip-neutral">Total: <strong>{{ agent_data.get("total_issues", 0) }}</strong></span>
+                {% set sev = agent_data.get("severity_distribution", {}) %}
+                {% if sev.get("high", 0) > 0 %}<span class="stat-chip chip-red">High: {{ sev["high"] }}</span>{% endif %}
+                {% if sev.get("medium", 0) > 0 %}<span class="stat-chip chip-orange">Medium: {{ sev["medium"] }}</span>{% endif %}
+                {% if sev.get("low", 0) > 0 %}<span class="stat-chip chip-green">Low: {{ sev["low"] }}</span>{% endif %}
+            </div>
+        </div>
+        {% if agent_data.get("solid_compliance") %}
+        <div class="detail-block">
+            <h5>SOLID Compliance</h5>
+            <div class="detail-stats">
+                {% for principle, score in agent_data["solid_compliance"].items() %}
+                <span class="stat-chip {% if score < 4 %}chip-red{% elif score < 6 %}chip-orange{% else %}chip-green{% endif %}">{{ principle }}: {{ "%.1f"|format(score) }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% if agent_data.get("top_issues") %}
+        <div class="detail-block">
+            <h5>Top Issues</h5>
+            <table class="detail-table">
+                <thead><tr><th>File</th><th>Issue</th><th>Severity</th><th>Category</th></tr></thead>
+                <tbody>
+                {% for issue in agent_data["top_issues"][:10] %}
+                <tr>
+                    <td class="cell-file">{{ issue["file"] }}</td>
+                    <td>{{ issue["issue"] }}</td>
+                    <td><span class="severity-badge severity-{{ issue.get('severity', 'low')|lower }}">{{ issue.get("severity", "low") }}</span></td>
+                    <td>{{ issue.get("category", "") }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+    {# === TEST DESIGN REVIEWER === #}
+    {% elif agent_key == "test_design_reviewer" %}
+        {% if agent_data.get("properties") %}
+        <div class="detail-block">
+            <h5>Property Scores</h5>
+            <table class="detail-table">
+                <thead><tr><th>Property</th><th>Static</th><th>LLM</th><th>Blended</th></tr></thead>
+                <tbody>
+                {% for name, scores in agent_data["properties"].items() %}
+                <tr>
+                    <td>{{ name }}</td>
+                    <td>{{ "%.1f"|format(scores["static"]) }}</td>
+                    <td>{{ "%.1f"|format(scores["llm"]) }}</td>
+                    <td><strong>{{ "%.1f"|format(scores["blended"]) }}</strong></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        {% set tc = agent_data.get("tautology_counts", {}) %}
+        {% if tc and (tc.get("mock_tautology", 0) + tc.get("mock_only", 0) + tc.get("trivial", 0) + tc.get("framework", 0)) > 0 %}
+        <div class="detail-block">
+            <h5>Tautology Counts</h5>
+            <div class="detail-stats">
+                {% if tc.get("mock_tautology", 0) > 0 %}<span class="stat-chip chip-red">Mock Tautology: {{ tc["mock_tautology"] }}</span>{% endif %}
+                {% if tc.get("mock_only", 0) > 0 %}<span class="stat-chip chip-orange">Mock Only: {{ tc["mock_only"] }}</span>{% endif %}
+                {% if tc.get("trivial", 0) > 0 %}<span class="stat-chip chip-orange">Trivial: {{ tc["trivial"] }}</span>{% endif %}
+                {% if tc.get("framework", 0) > 0 %}<span class="stat-chip chip-orange">Framework: {{ tc["framework"] }}</span>{% endif %}
+            </div>
+        </div>
+        {% endif %}
+        {% if agent_data.get("worst_offenders") %}
+        <div class="detail-block">
+            <h5>Worst Offenders</h5>
+            {% for offender in agent_data["worst_offenders"][:8] %}
+            <div class="offender-card">
+                <div class="offender-header">
+                    <span class="cell-file">{{ offender["file"] }}</span>
+                    <span class="stat-chip {% if offender['score'] < 4 %}chip-red{% elif offender['score'] < 6 %}chip-orange{% else %}chip-green{% endif %}">{{ "%.1f"|format(offender["score"]) }}/10</span>
+                </div>
+                <ul class="offender-issues">
+                    {% for issue in offender.get("issues", []) %}<li>{{ issue }}</li>{% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+    {# === COGNITIVE LOAD ANALYZER === #}
+    {% elif agent_key == "cognitive_load_analyzer" %}
+        {% if agent_data.get("dimensions") %}
+        <div class="detail-block">
+            <h5>Dimensions</h5>
+            <table class="detail-table">
+                <thead><tr><th>Dimension</th><th>Raw</th><th>Normalized</th><th>Weighted</th></tr></thead>
+                <tbody>
+                {% for name, dim in agent_data["dimensions"].items() %}
+                <tr>
+                    <td>{{ name }}</td>
+                    <td>{{ dim["raw"] }}</td>
+                    <td>{{ "%.2f"|format(dim["normalized"]) }}</td>
+                    <td>{{ "%.2f"|format(dim["weighted"]) }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        {% if agent_data.get("worst_offenders") %}
+        <div class="detail-block">
+            <h5>Worst Offenders</h5>
+            <table class="detail-table">
+                <thead><tr><th>File</th><th>Score</th><th>Primary Dimension</th></tr></thead>
+                <tbody>
+                {% for off in agent_data["worst_offenders"][:8] %}
+                <tr>
+                    <td class="cell-file">{{ off["file"] }}</td>
+                    <td>{{ "%.1f"|format(off["score"]) }}</td>
+                    <td>{{ off.get("primary_dimension", "") }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+    {# === DDD ASSESSOR === #}
+    {% elif agent_key == "ddd_assessor" %}
+        {% if agent_data.get("pattern_maturity") %}
+        <div class="detail-block">
+            <h5>Pattern Maturity</h5>
+            <div class="detail-stats">
+                {% for name, score in agent_data["pattern_maturity"].items() %}
+                <span class="stat-chip {% if score < 4 %}chip-red{% elif score < 6 %}chip-orange{% else %}chip-green{% endif %}">{{ name|capitalize }}: {{ "%.1f"|format(score) }}/10</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% if agent_data.get("anti_patterns") %}
+        <div class="detail-block">
+            <h5>Anti-Patterns Detected</h5>
+            <table class="detail-table">
+                <thead><tr><th>Anti-Pattern</th><th>Severity</th><th>Location</th></tr></thead>
+                <tbody>
+                {% for ap in agent_data["anti_patterns"][:10] %}
+                <tr>
+                    <td><strong>{{ ap["name"] }}</strong></td>
+                    <td><span class="severity-badge severity-{{ ap.get('severity', 'medium')|lower }}">{{ ap.get("severity", "") }}</span></td>
+                    <td class="cell-file">{{ ap.get("location", "") }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+    {# === LEGACY CODE ANALYZER === #}
+    {% elif agent_key == "legacy_code_analyzer" %}
+        <div class="detail-block">
+            <h5>Overview</h5>
+            <div class="detail-stats">
+                <span class="stat-chip {% if agent_data.get('risk_level') == 'Critical' %}chip-red{% elif agent_data.get('risk_level') == 'High' %}chip-red{% elif agent_data.get('risk_level') == 'Medium' %}chip-orange{% else %}chip-green{% endif %}">Risk: {{ agent_data.get("risk_level", "N/A") }}</span>
+                <span class="stat-chip chip-neutral">Dependencies: {{ agent_data.get("dependency_count", 0) }}</span>
+                <span class="stat-chip chip-neutral">Testability: {{ "%.0f"|format((agent_data.get("testability_score", 0)) * 100) }}%</span>
+            </div>
+            {% set seams = agent_data.get("seam_availability", {}) %}
+            {% if seams %}
+            <div class="detail-stats" style="margin-top: 0.5rem;">
+                <span class="stat-chip chip-neutral">Object Seams: {{ seams.get("object", 0) }}</span>
+                <span class="stat-chip chip-neutral">Link Seams: {{ seams.get("link", 0) }}</span>
+                <span class="stat-chip chip-neutral">Preprocessing Seams: {{ seams.get("preprocessing", 0) }}</span>
+            </div>
+            {% endif %}
+        </div>
+        {% if agent_data.get("modules_at_risk") %}
+        <div class="detail-block">
+            <h5>Modules at Risk</h5>
+            <table class="detail-table">
+                <thead><tr><th>File</th><th>Risk</th><th>Dependencies</th><th>Seams</th></tr></thead>
+                <tbody>
+                {% for mod in agent_data["modules_at_risk"][:10] %}
+                <tr>
+                    <td class="cell-file">{{ mod["file"] }}</td>
+                    <td><span class="severity-badge severity-{{ mod.get('risk', 'medium')|lower }}">{{ mod.get("risk", "") }}</span></td>
+                    <td>{{ mod.get("dependencies", 0) }}</td>
+                    <td>{{ mod.get("seams", 0) }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+    {# === REFACTORING ADVISOR === #}
+    {% elif agent_key == "refactoring_advisor" %}
+        <div class="detail-block">
+            <h5>Overview</h5>
+            <div class="detail-stats">
+                <span class="stat-chip chip-neutral">Total Recommendations: <strong>{{ agent_data.get("total_recommendations", 0) }}</strong></span>
+                {% set rd = agent_data.get("risk_distribution", {}) %}
+                {% if rd.get("high", 0) > 0 %}<span class="stat-chip chip-red">High Risk: {{ rd["high"] }}</span>{% endif %}
+                {% if rd.get("medium", 0) > 0 %}<span class="stat-chip chip-orange">Medium Risk: {{ rd["medium"] }}</span>{% endif %}
+                {% if rd.get("low", 0) > 0 %}<span class="stat-chip chip-green">Low Risk: {{ rd["low"] }}</span>{% endif %}
+            </div>
+        </div>
+        {% if agent_data.get("priority_matrix") %}
+        <div class="detail-block">
+            <h5>Priority Matrix (Top Items)</h5>
+            <table class="detail-table">
+                <thead><tr><th>Item</th><th>Impact</th><th>Complexity</th><th>Risk</th></tr></thead>
+                <tbody>
+                {% for item in agent_data["priority_matrix"][:10] %}
+                <tr>
+                    <td>{{ item["item"] }}</td>
+                    <td><span class="severity-badge severity-{{ item.get('impact', 'medium')|lower }}">{{ item.get("impact", "") }}</span></td>
+                    <td>{{ item.get("complexity", "") }}</td>
+                    <td>{{ item.get("risk", "") }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        {% if agent_data.get("implementation_sequence") %}
+        <div class="detail-block">
+            <h5>Implementation Sequence</h5>
+            <ol class="implementation-list">
+                {% for step in agent_data["implementation_sequence"][:8] %}
+                <li><strong>{{ step["item"] }}</strong> &mdash; {{ step["rationale"] }}</li>
+                {% endfor %}
+            </ol>
+        </div>
+        {% endif %}
+
+    {# === GENERIC AGENTS (all others) === #}
+    {% else %}
+        {# Risk distribution #}
+        {% set rd = agent_data.get("risk_distribution", {}) %}
+        {% if rd and (rd.get("critical", 0) + rd.get("high", 0) + rd.get("medium", 0) + rd.get("low", 0)) > 0 %}
+        <div class="detail-block">
+            <h5>Risk Distribution</h5>
+            <div class="detail-stats">
+                {% if rd.get("critical", 0) > 0 %}<span class="stat-chip chip-red">Critical: {{ rd["critical"] }}</span>{% endif %}
+                {% if rd.get("high", 0) > 0 %}<span class="stat-chip chip-red">High: {{ rd["high"] }}</span>{% endif %}
+                {% if rd.get("medium", 0) > 0 %}<span class="stat-chip chip-orange">Medium: {{ rd["medium"] }}</span>{% endif %}
+                {% if rd.get("low", 0) > 0 %}<span class="stat-chip chip-green">Low: {{ rd["low"] }}</span>{% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {# Recommendations #}
+        {% if agent_data.get("recommendations") %}
+        <div class="detail-block">
+            <h5>Recommendations</h5>
+            <table class="detail-table">
+                <thead><tr><th>#</th><th>Recommendation</th><th>Effort</th></tr></thead>
+                <tbody>
+                {% for rec in agent_data["recommendations"][:10] %}
+                <tr>
+                    <td>{{ rec.get("priority", loop.index) }}</td>
+                    <td>
+                        <strong>{{ rec["title"] }}</strong>
+                        {% if rec.get("description") and rec["description"] != rec["title"] %}
+                        <br><span class="rec-description">{{ rec["description"] }}</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="stat-chip chip-neutral">{{ rec.get("effort", "medium") }}</span></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    {% endif %}
+</div>
+{% endif %}
+{% endmacro %}
