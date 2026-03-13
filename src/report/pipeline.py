@@ -38,6 +38,7 @@ from src.report.models import (
 from src.report.normalize import normalize_all
 from src.report.render import render_report, write_report
 from src.report.risk import assess_all_risks
+from src.report.sanitize import sanitize_agent_results
 
 
 # ---------------------------------------------------------------------------
@@ -246,6 +247,7 @@ def build_report_data(
         analysis_date=datetime.now(timezone.utc).strftime("%Y-%m-%d"),
     )
     agent_results_serialized = _serialize_agent_results(results)
+    agent_results_sanitized = sanitize_agent_results(agent_results_serialized)
 
     # Use snake_case dimensions for ReportData (template expects snake_case keys)
     # Display names are only needed for risk assessment (already computed above)
@@ -255,7 +257,7 @@ def build_report_data(
         overall_score=overall_score,
         rating=rating,
         risk_assessments=risk_assessments,
-        agent_results=agent_results_serialized,
+        agent_results=agent_results_sanitized,
     )
 
 
