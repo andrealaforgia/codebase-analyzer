@@ -41,12 +41,12 @@ The orchestrator launches 6 specialized analysis agents. Each agent reads the ta
 
 | Agent Key | Agent Type | Definition Path | JSON Output |
 |-----------|-----------|-----------------|-------------|
-| code_smell_detector | `alf-code-smell-detector` | `/Users/andrealaforgia/dev/claude-code-agents/code-smell-detector/code-smell-detector.md` | `code-smell-detector-data.json` |
-| test_design_reviewer | `test-design-reviewer` | `/Users/andrealaforgia/dev/claude-code-agents/test-design-reviewer/test-design-reviewer.md` | `test-design-reviewer-data.json` |
-| cognitive_load_analyzer | `cognitive-load-analyzer` | `/Users/andrealaforgia/dev/claude-code-agents/cognitive-load-analyzer/cognitive-load-analyzer.md` | `cognitive-load-analyzer-data.json` |
-| ddd_architect | `alf-ddd-architect` | `/Users/andrealaforgia/dev/claude-code-agents/domain-driven-design/ddd-architect-agent.md` | `ddd-architect-data.json` |
-| legacy_code_expert | `alf-legacy-code-expert` | `/Users/andrealaforgia/dev/claude-code-agents/legacy-code-expert/legacy-code-expert.md` | `legacy-code-expert-data.json` |
-| refactoring_expert | `alf-refactoring-expert` | `/Users/andrealaforgia/dev/claude-code-agents/refactoring-expert/refactoring-expert.md` | `refactoring-expert-data.json` |
+| code_smell_detector | `alf-code-smell-detector` | `~/.claude/agents/code-smell-detector/code-smell-detector.md` | `code-smell-detector-data.json` |
+| test_design_reviewer | `test-design-reviewer` | `~/.claude/agents/test-design-reviewer/test-design-reviewer.md` | `test-design-reviewer-data.json` |
+| cognitive_load_analyzer | `cognitive-load-analyzer` | `~/.claude/agents/cognitive-load-analyzer/cognitive-load-analyzer.md` | `cognitive-load-analyzer-data.json` |
+| ddd_architect | `alf-ddd-architect` | `~/.claude/agents/domain-driven-design/ddd-architect-agent.md` | `ddd-architect-data.json` |
+| legacy_code_expert | `alf-legacy-code-expert` | `~/.claude/agents/legacy-code-expert/legacy-code-expert.md` | `legacy-code-expert-data.json` |
+| refactoring_expert | `alf-refactoring-expert` | `~/.claude/agents/refactoring-expert/refactoring-expert.md` | `refactoring-expert-data.json` |
 
 ### 2.2 Agent Prompt Template
 
@@ -137,7 +137,7 @@ After all agents have completed (or failed), invoke the Python report-generation
 ### 5.1 Pipeline Command
 
 ```bash
-cd /Users/andrealaforgia/dev/codebase-analyzer && uv run python -c "from src.report.pipeline import generate_report; import sys; sys.exit(generate_report('{results_dir}', '{output_path}', '{project_name}'))"
+uv run python -c "from src.report.pipeline import generate_report; import sys; sys.exit(generate_report('{results_dir}', '{output_path}', '{project_name}'))"
 ```
 
 Where:
@@ -168,12 +168,12 @@ After the pipeline completes, provide the user with:
 
 ## 7. Example Invocation
 
-User says: "Analyze the codebase at /Users/andrealaforgia/dev/my-project"
+User says: "Analyze the codebase at /path/to/my-project"
 
 The orchestrator:
-1. Validates `/Users/andrealaforgia/dev/my-project` exists
-2. Creates results directory at `/Users/andrealaforgia/dev/my-project/.codebase-analyzer-results/`
+1. Validates `/path/to/my-project` exists
+2. Creates results directory at `/path/to/my-project/.codebase-analyzer-results/`
 3. Launches 5 agents in parallel via Agent tool
 4. Waits for code-smell-detector, then launches refactoring-expert
 5. After all agents complete, invokes the Python pipeline
-6. Reports: "Report generated at /Users/andrealaforgia/dev/my-project/codebase-analysis-report.html -- Overall score: 72/100 (Good)"
+6. Reports: "Report generated at /path/to/my-project/codebase-analysis-report.html -- Overall score: 72/100 (Good)"

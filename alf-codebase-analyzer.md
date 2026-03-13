@@ -41,27 +41,27 @@ The orchestrator launches 21 specialized analysis agents. Each agent reads the t
 
 | Agent Key | Agent Type | Definition Path | JSON Output |
 |-----------|-----------|-----------------|-------------|
-| code_smell_detector | `alf-code-smell-detector` | `/Users/andrealaforgia/dev/claude-code-agents/alf-code-smell-detector/alf-code-smell-detector.md` | `code-smell-detector-data.json` |
-| test_design_reviewer | `alf-test-design-reviewer` | `/Users/andrealaforgia/dev/claude-code-agents/alf-test-design-reviewer/alf-test-design-reviewer.md` | `test-design-reviewer-data.json` |
-| cognitive_load_analyzer | `alf-cognitive-load-analyzer` | `/Users/andrealaforgia/dev/claude-code-agents/alf-cognitive-load-analyzer/alf-cognitive-load-analyzer.md` | `cognitive-load-analyzer-data.json` |
-| ddd_assessor | `alf-ddd-assessor` | `/Users/andrealaforgia/dev/claude-code-agents/alf-ddd-assessor/alf-ddd-assessor.md` | `ddd-architect-data.json` |
-| legacy_code_analyzer | `alf-legacy-code-analyzer` | `/Users/andrealaforgia/dev/claude-code-agents/alf-legacy-code-analyzer/alf-legacy-code-analyzer.md` | `legacy-code-expert-data.json` |
-| refactoring_advisor | `alf-refactoring-advisor` | `/Users/andrealaforgia/dev/claude-code-agents/alf-refactoring-advisor/alf-refactoring-advisor.md` | `refactoring-expert-data.json` |
-| security_assessor | `alf-security-assessor` | `/Users/andrealaforgia/dev/claude-code-agents/alf-security-assessor/alf-security-assessor.md` | `security-assessor-data.json` |
-| error_handling_reviewer | `alf-error-handling-reviewer` | `/Users/andrealaforgia/dev/claude-code-agents/alf-error-handling-reviewer/alf-error-handling-reviewer.md` | `error-handling-reviewer-data.json` |
-| api_design_reviewer | `alf-api-design-reviewer` | `/Users/andrealaforgia/dev/claude-code-agents/alf-api-design-reviewer/alf-api-design-reviewer.md` | `api-design-reviewer-data.json` |
-| dependency_auditor | `alf-dependency-auditor` | `/Users/andrealaforgia/dev/claude-code-agents/alf-dependency-auditor/alf-dependency-auditor.md` | `dependency-auditor-data.json` |
-| concurrency_analyzer | `alf-concurrency-analyzer` | `/Users/andrealaforgia/dev/claude-code-agents/alf-concurrency-analyzer/alf-concurrency-analyzer.md` | `concurrency-analyzer-data.json` |
-| documentation_reviewer | `alf-documentation-reviewer` | `/Users/andrealaforgia/dev/claude-code-agents/alf-documentation-reviewer/alf-documentation-reviewer.md` | `documentation-reviewer-data.json` |
-| dead_code_detector | `alf-dead-code-detector` | `/Users/andrealaforgia/dev/claude-code-agents/alf-dead-code-detector/alf-dead-code-detector.md` | `dead-code-detector-data.json` |
-| devops_evaluator | `alf-devops-evaluator` | `/Users/andrealaforgia/dev/claude-code-agents/alf-devops-evaluator/alf-devops-evaluator.md` | `devops-evaluator-data.json` |
-| ownership_analyzer | `alf-ownership-analyzer` | `/Users/andrealaforgia/dev/claude-code-agents/alf-ownership-analyzer/alf-ownership-analyzer.md` | `ownership-analyzer-data.json` |
-| consistency_checker | `alf-consistency-checker` | `/Users/andrealaforgia/dev/claude-code-agents/alf-consistency-checker/alf-consistency-checker.md` | `consistency-checker-data.json` |
-| data_layer_reviewer | `alf-data-layer-reviewer` | `/Users/andrealaforgia/dev/claude-code-agents/alf-data-layer-reviewer/alf-data-layer-reviewer.md` | `data-layer-reviewer-data.json` |
-| observability_assessor | `alf-observability-assessor` | `/Users/andrealaforgia/dev/claude-code-agents/alf-observability-assessor/alf-observability-assessor.md` | `observability-assessor-data.json` |
-| system_auditor | `alf-system-auditor` | `/Users/andrealaforgia/dev/claude-code-agents/alf-system-auditor/alf-system-auditor.md` | `system-auditor-data.json` |
-| accessibility_assessor | `alf-accessibility-assessor` | `/Users/andrealaforgia/dev/claude-code-agents/alf-accessibility-assessor/alf-accessibility-assessor.md` | `accessibility-assessor-data.json` |
-| system_explorer | `alf-system-explorer` | `/Users/andrealaforgia/dev/claude-code-agents/alf-system-explorer/alf-system-explorer.md` | `system-explorer-data.json` |
+| code_smell_detector | `alf-code-smell-detector` | `~/.claude/agents/alf-code-smell-detector/alf-code-smell-detector.md` | `code-smell-detector-data.json` |
+| test_design_reviewer | `alf-test-design-reviewer` | `~/.claude/agents/alf-test-design-reviewer/alf-test-design-reviewer.md` | `test-design-reviewer-data.json` |
+| cognitive_load_analyzer | `alf-cognitive-load-analyzer` | `~/.claude/agents/alf-cognitive-load-analyzer/alf-cognitive-load-analyzer.md` | `cognitive-load-analyzer-data.json` |
+| ddd_assessor | `alf-ddd-assessor` | `~/.claude/agents/alf-ddd-assessor/alf-ddd-assessor.md` | `ddd-architect-data.json` |
+| legacy_code_analyzer | `alf-legacy-code-analyzer` | `~/.claude/agents/alf-legacy-code-analyzer/alf-legacy-code-analyzer.md` | `legacy-code-expert-data.json` |
+| refactoring_advisor | `alf-refactoring-advisor` | `~/.claude/agents/alf-refactoring-advisor/alf-refactoring-advisor.md` | `refactoring-expert-data.json` |
+| security_assessor | `alf-security-assessor` | `~/.claude/agents/alf-security-assessor/alf-security-assessor.md` | `security-assessor-data.json` |
+| error_handling_reviewer | `alf-error-handling-reviewer` | `~/.claude/agents/alf-error-handling-reviewer/alf-error-handling-reviewer.md` | `error-handling-reviewer-data.json` |
+| api_design_reviewer | `alf-api-design-reviewer` | `~/.claude/agents/alf-api-design-reviewer/alf-api-design-reviewer.md` | `api-design-reviewer-data.json` |
+| dependency_auditor | `alf-dependency-auditor` | `~/.claude/agents/alf-dependency-auditor/alf-dependency-auditor.md` | `dependency-auditor-data.json` |
+| concurrency_analyzer | `alf-concurrency-analyzer` | `~/.claude/agents/alf-concurrency-analyzer/alf-concurrency-analyzer.md` | `concurrency-analyzer-data.json` |
+| documentation_reviewer | `alf-documentation-reviewer` | `~/.claude/agents/alf-documentation-reviewer/alf-documentation-reviewer.md` | `documentation-reviewer-data.json` |
+| dead_code_detector | `alf-dead-code-detector` | `~/.claude/agents/alf-dead-code-detector/alf-dead-code-detector.md` | `dead-code-detector-data.json` |
+| devops_evaluator | `alf-devops-evaluator` | `~/.claude/agents/alf-devops-evaluator/alf-devops-evaluator.md` | `devops-evaluator-data.json` |
+| ownership_analyzer | `alf-ownership-analyzer` | `~/.claude/agents/alf-ownership-analyzer/alf-ownership-analyzer.md` | `ownership-analyzer-data.json` |
+| consistency_checker | `alf-consistency-checker` | `~/.claude/agents/alf-consistency-checker/alf-consistency-checker.md` | `consistency-checker-data.json` |
+| data_layer_reviewer | `alf-data-layer-reviewer` | `~/.claude/agents/alf-data-layer-reviewer/alf-data-layer-reviewer.md` | `data-layer-reviewer-data.json` |
+| observability_assessor | `alf-observability-assessor` | `~/.claude/agents/alf-observability-assessor/alf-observability-assessor.md` | `observability-assessor-data.json` |
+| system_auditor | `alf-system-auditor` | `~/.claude/agents/alf-system-auditor/alf-system-auditor.md` | `system-auditor-data.json` |
+| accessibility_assessor | `alf-accessibility-assessor` | `~/.claude/agents/alf-accessibility-assessor/alf-accessibility-assessor.md` | `accessibility-assessor-data.json` |
+| system_explorer | `alf-system-explorer` | `~/.claude/agents/alf-system-explorer/alf-system-explorer.md` | `system-explorer-data.json` |
 
 ### 2.2 Agent Prompt Template
 
@@ -187,7 +187,7 @@ After all agents have completed (or failed), invoke the Python report-generation
 ### 5.1 Pipeline Command
 
 ```bash
-cd /Users/andrealaforgia/dev/codebase-analyzer && uv run python -c "from src.report.pipeline import generate_report; import sys; sys.exit(generate_report('{results_dir}', '{output_path}', '{project_name}'))"
+uv run python -c "from src.report.pipeline import generate_report; import sys; sys.exit(generate_report('{results_dir}', '{output_path}', '{project_name}'))"
 ```
 
 Where:
@@ -218,12 +218,12 @@ After the pipeline completes, provide the user with:
 
 ## 7. Example Invocation
 
-User says: "Analyze the codebase at /Users/andrealaforgia/dev/my-project"
+User says: "Analyze the codebase at /path/to/my-project"
 
 The orchestrator:
-1. Validates `/Users/andrealaforgia/dev/my-project` exists
-2. Creates results directory at `/Users/andrealaforgia/dev/my-project/.codebase-analyzer-results/`
+1. Validates `/path/to/my-project` exists
+2. Creates results directory at `/path/to/my-project/.codebase-analyzer-results/`
 3. Launches 20 agents in parallel via Agent tool
 4. Waits for alf-code-smell-detector, then launches alf-refactoring-advisor
 5. After all agents complete, invokes the Python pipeline
-6. Reports: "Report generated at /Users/andrealaforgia/dev/my-project/codebase-analysis-report.html -- Overall score: 72/100 (Good)"
+6. Reports: "Report generated at /path/to/my-project/codebase-analysis-report.html -- Overall score: 72/100 (Good)"

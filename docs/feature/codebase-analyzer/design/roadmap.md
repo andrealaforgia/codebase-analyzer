@@ -143,7 +143,7 @@
 ### Phase 05: Agent Modifications (External Dependency)
 
 #### Step 05-01: Add JSON output to all 6 analysis agents
-- **Description**: Modify each agent's `.md` definition at `/Users/andrealaforgia/dev/claude-code-agents/` to write a `{agent-name}-data.json` file conforming to the defined contract schemas. Existing markdown output unchanged.
+- **Description**: Modify each agent's `.md` definition at `~/.claude/agents/` to write a `{agent-name}-data.json` file conforming to the defined contract schemas. Existing markdown output unchanged.
 - **Acceptance Criteria**:
   - Each agent writes a valid JSON file alongside its markdown report
   - JSON conforms to the Pydantic model for that agent

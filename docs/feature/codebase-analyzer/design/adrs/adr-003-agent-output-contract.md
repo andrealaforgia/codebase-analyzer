@@ -9,7 +9,7 @@ Analysis agents currently output markdown reports. The report generator needs st
 
 ## Decision
 
-**Modify each agent** to write a structured JSON file (`{agent-name}-data.json`) alongside its existing markdown report. Each agent's JSON schema is defined as an explicit contract. Agent modifications are made at the source in `/Users/andrealaforgia/dev/claude-code-agents/`.
+**Modify each agent** to write a structured JSON file (`{agent-name}-data.json`) alongside its existing markdown report. Each agent's JSON schema is defined as an explicit contract. Agent modifications are made at the source in `~/.claude/agents/`.
 
 JSON files are validated against Pydantic models before consumption by the normalizer. Schema violations produce clear error messages identifying the agent and missing/malformed field.
 

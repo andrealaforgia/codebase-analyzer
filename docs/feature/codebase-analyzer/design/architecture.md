@@ -475,7 +475,7 @@ These constraints guide the software crafter during implementation:
 
 ## 14. Dependency on Agent Modifications
 
-The 6 analysis agents at `/Users/andrealaforgia/dev/claude-code-agents/` must be modified to produce structured JSON output files alongside their existing markdown reports. This is a prerequisite for the analyzer to function.
+The 6 analysis agents at `~/.claude/agents/` must be modified to produce structured JSON output files alongside their existing markdown reports. This is a prerequisite for the analyzer to function.
 
 **Required changes per agent**:
 - Add instruction to write a `{agent-name}-data.json` file to the analysis output directory

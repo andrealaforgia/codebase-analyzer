@@ -146,4 +146,4 @@ Architectural Decision Records: 6 ADRs in `docs/feature/codebase-analyzer/design
 - `deliver/` -- Roadmap JSON, execution log, mutation testing report
 
 ### External Files Modified
-- 6 analysis agent definitions in `/Users/andrealaforgia/dev/claude-code-agents/` (JSON output added)
+- 6 analysis agent definitions in `~/.claude/agents/` (JSON output added)
