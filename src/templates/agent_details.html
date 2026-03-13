@@ -58,13 +58,13 @@
         <div class="detail-block">
             <h5>Property Scores</h5>
             <table class="detail-table">
-                <thead><tr><th>Property</th><th>Static</th><th>LLM</th><th>Blended</th></tr></thead>
+                <thead><tr><th>Property</th><th>Static</th><th>Semantic</th><th>Blended</th></tr></thead>
                 <tbody>
                 {% for name, scores in agent_data["properties"].items() %}
                 <tr>
                     <td>{{ name }}</td>
                     <td>{{ "%.1f"|format(scores["static"]) }}</td>
-                    <td>{{ "%.1f"|format(scores["llm"]) }}</td>
+                    <td>{{ "%.1f"|format(scores.get("semantic", scores.get("llm", 0))) }}</td>
                     <td><strong>{{ "%.1f"|format(scores["blended"]) }}</strong></td>
                 </tr>
                 {% endfor %}

@@ -92,7 +92,7 @@ class CodeSmellDetectorData(BaseModel):
 
 
 class PropertyScores(BaseModel):
-    """Static, LLM, and blended scores for a test design property."""
+    """Static, semantic, and blended scores for a test design property."""
 
     model_config = ConfigDict(frozen=True)
 

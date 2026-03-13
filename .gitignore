@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyo
+*.sqlite
+.pytest_cache/
+.venv/
+*.egg-info/
+dist/
+build/
+.nwave/des/logs/

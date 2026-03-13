@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codebase Health -- Portfolio Report</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                         "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6; color: #333; background: #f5f5f5;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff; padding: 2.5rem 2rem; text-align: center;
+        }
+        header h1 { font-size: 2rem; margin-bottom: 0.25rem; }
+        header p { opacity: 0.8; font-size: 0.95rem; }
+
+        nav {
+            position: sticky; top: 0; z-index: 1000;
+            background: #16213e; padding: 0.5rem 1rem;
+            display: flex; flex-wrap: wrap; gap: 0.25rem 1rem;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+        nav a {
+            color: #e2e2e2; text-decoration: none; font-size: 0.85rem;
+            padding: 0.35rem 0.75rem; border-radius: 4px; transition: background 0.2s;
+        }
+        nav a:hover, nav a:focus { background: rgba(255,255,255,0.1); color: #fff; }
+
+        main { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+
+        section {
+            background: #fff; border-radius: 8px; padding: 2rem;
+            margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        section h2 {
+            font-size: 1.4rem; margin-bottom: 1rem; color: #1a1a2e;
+            border-bottom: 2px solid #e0e0e0; padding-bottom: 0.5rem;
+        }
+
+        /* Portfolio score */
+        .portfolio-score {
+            text-align: center; padding: 1.5rem 0;
+        }
+        .portfolio-score .score-number {
+            font-size: 3.5rem; font-weight: 700;
+        }
+        .portfolio-score .score-label {
+            font-size: 1.4rem; opacity: 0.5; font-weight: 400;
+        }
+        .portfolio-score .rating-badge {
+            display: inline-block; font-size: 1rem; font-weight: 600;
+            padding: 0.3rem 0.9rem; border-radius: 4px; margin-top: 0.5rem;
+        }
+
+        .rating-excellent { background: #d4edda; color: #155724; }
+        .rating-good { background: #cce5ff; color: #004085; }
+        .rating-needs-attention { background: #fff3cd; color: #856404; }
+        .rating-critical { background: #f8d7da; color: #721c24; }
+
+        .stats-row {
+            display: flex; justify-content: center; gap: 3rem;
+            margin-top: 1rem; flex-wrap: wrap;
+        }
+        .stat-box { text-align: center; }
+        .stat-box .stat-value { font-size: 1.8rem; font-weight: 700; color: #1a1a2e; }
+        .stat-box .stat-label { font-size: 0.85rem; color: #666; }
+
+        /* Alert banner */
+        .alert-banner {
+            border: 2px solid #dc3545; border-radius: 8px;
+            padding: 1rem 1.25rem; margin-bottom: 1.5rem; background: #fff5f5;
+        }
+        .alert-banner .alert-title {
+            color: #dc3545; font-weight: 700; font-size: 1rem; margin-bottom: 0.5rem;
+        }
+        .alert-banner ul { margin: 0; padding-left: 1.2rem; }
+        .alert-banner li { margin-bottom: 0.25rem; }
+
+        /* Tables */
+        table {
+            width: 100%; border-collapse: collapse; font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        thead tr { background: #f0f0f0; }
+        th {
+            text-align: left; padding: 0.6rem 0.75rem;
+            border-bottom: 2px solid #ccc; font-weight: 600;
+        }
+        th.num { text-align: right; }
+        td {
+            padding: 0.5rem 0.75rem; border-bottom: 1px solid #eee;
+            vertical-align: middle;
+        }
+        td.num { text-align: right; font-weight: 700; }
+        tbody tr:hover { background: #f8f9fa; }
+
+        /* Severity badges */
+        .severity-badge {
+            display: inline-block; font-size: 0.75rem; font-weight: 700;
+            padding: 0.15rem 0.5rem; border-radius: 3px; text-transform: uppercase;
+        }
+        .severity-high { background: #f8d7da; color: #721c24; }
+        .severity-moderate { background: #fff3cd; color: #856404; }
+        .severity-low { background: #d4edda; color: #155724; }
+        .severity-na { background: #e9ecef; color: #495057; }
+
+        /* Score color coding */
+        .score-critical { color: #dc3545; }
+        .score-warning { color: #e67e22; }
+        .score-fair { color: #f0ad4e; }
+        .score-good { color: #28a745; }
+
+        /* Heatmap cell */
+        .heatmap-cell {
+            text-align: center; font-weight: 600; font-size: 0.8rem;
+            padding: 0.4rem 0.6rem;
+        }
+        .heat-high { background: #f8d7da; color: #721c24; }
+        .heat-moderate { background: #fff3cd; color: #856404; }
+        .heat-low { background: #d4edda; color: #155724; }
+
+        /* Dimension bar */
+        .dim-bar-container {
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .dim-bar {
+            height: 14px; border-radius: 3px; min-width: 4px;
+        }
+        .dim-bar-label { font-size: 0.82rem; font-weight: 600; min-width: 2.5rem; }
+
+        footer {
+            text-align: center; padding: 1.5rem; font-size: 0.8rem; color: #999;
+        }
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.4rem; }
+            main { padding: 0 0.5rem; }
+            section { padding: 1.25rem; }
+            .stats-row { gap: 1.5rem; }
+            nav { gap: 0.15rem 0.5rem; }
+            nav a { font-size: 0.75rem; padding: 0.25rem 0.5rem; }
+        }
+
+        @media print {
+            nav { display: none !important; }
+            body { background: #fff; color: #000; font-size: 11pt; }
+            header { background: #fff; color: #000; border-bottom: 2px solid #000; }
+            section { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+            footer { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Codebase Health -- Portfolio Report</h1>
+    <p>Senior Leadership Summary &mdash; {{ report_date }}</p>
+</header>
+
+<nav>
+    <a href="#overview">Overview</a>
+    <a href="#projects">Projects</a>
+    <a href="#risk-heatmap">Risk Heatmap</a>
+    <a href="#dimensions">Dimensions</a>
+</nav>
+
+<main>
+
+    <!-- ==================== Portfolio Overview ==================== -->
+    <section id="overview">
+        <h2>Portfolio Overview</h2>
+        <div class="portfolio-score">
+            <div class="score-number {% if portfolio_rating == 'Excellent' %}score-good{% elif portfolio_rating == 'Good' %}score-good{% elif portfolio_rating == 'Needs Attention' %}score-warning{% else %}score-critical{% endif %}">
+                {{ "%.1f"|format(portfolio_score) }}<span class="score-label"> / 100</span>
+            </div>
+            <div>
+                <span class="rating-badge {% if portfolio_rating == 'Excellent' %}rating-excellent{% elif portfolio_rating == 'Good' %}rating-good{% elif portfolio_rating == 'Needs Attention' %}rating-needs-attention{% else %}rating-critical{% endif %}">
+                    {{ portfolio_rating }}
+                </span>
+            </div>
+        </div>
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-value">{{ total_projects }}</div>
+                <div class="stat-label">Projects Analyzed</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">{{ dimension_averages|length }}</div>
+                <div class="stat-label">Dimensions Tracked</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value {% if critical_projects %}score-critical{% else %}score-good{% endif %}">{{ critical_projects|length }}</div>
+                <div class="stat-label">Critical Projects</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== Critical Alert ==================== -->
+    {% if critical_projects %}
+    <div class="alert-banner">
+        <div class="alert-title">[!] Projects Requiring Immediate Attention</div>
+        <ul>
+            {% for p in critical_projects %}
+            <li><strong>{{ p.project_name }}</strong> &mdash; {{ "%.1f"|format(p.overall_score) }}/100 (Critical)</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- ==================== Project Summary Table ==================== -->
+    <section id="projects">
+        <h2>Project Health Summary</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Project</th>
+                    <th class="num">Score</th>
+                    <th>Rating</th>
+                    <th>Weakest Dimension</th>
+                    <th>Top Risk</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in projects %}
+                <tr>
+                    <td><strong>{{ p.project_name }}</strong></td>
+                    <td class="num {% if p.overall_score <= 40 %}score-critical{% elif p.overall_score <= 60 %}score-warning{% elif p.overall_score <= 80 %}score-fair{% else %}score-good{% endif %}">
+                        {{ "%.1f"|format(p.overall_score) }}
+                    </td>
+                    <td>
+                        <span class="rating-badge {% if p.rating == 'Excellent' %}rating-excellent{% elif p.rating == 'Good' %}rating-good{% elif p.rating == 'Needs Attention' %}rating-needs-attention{% else %}rating-critical{% endif %}">
+                            {{ p.rating }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if p.weakest_dimension %}
+                        {{ p.weakest_dimension.name|replace('_', ' ')|title }}
+                        <span style="opacity:0.6">({{ "%.1f"|format(p.weakest_dimension.normalized_score) }})</span>
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if p.top_risk %}
+                        {{ p.top_risk.name }}
+                        <span class="severity-badge severity-{{ p.top_risk.severity|lower }}">{{ p.top_risk.severity }}</span>
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+
+    <!-- ==================== Risk Heatmap ==================== -->
+    {% if risk_matrix %}
+    <section id="risk-heatmap">
+        <h2>Risk Heatmap</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Project</th>
+                    {% for cat in risk_categories %}
+                    <th style="text-align:center;">{{ cat }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in risk_matrix %}
+                <tr>
+                    <td><strong>{{ row.project_name }}</strong></td>
+                    {% for cat in risk_categories %}
+                    {% set severity = row.risks.get(cat, 'N/A') %}
+                    <td class="heatmap-cell {% if severity == 'HIGH' %}heat-high{% elif severity == 'MODERATE' %}heat-moderate{% elif severity == 'LOW' %}heat-low{% endif %}">
+                        {{ severity }}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+    {% endif %}
+
+    <!-- ==================== Dimension Averages ==================== -->
+    {% if dimension_averages %}
+    <section id="dimensions">
+        <h2>Portfolio Dimension Averages</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Dimension</th>
+                    <th style="width:50%;">Score Distribution</th>
+                    <th class="num">Average</th>
+                    <th class="num">Projects</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for dim in dimension_averages %}
+                <tr>
+                    <td>{{ dim.name|replace('_', ' ')|title }}</td>
+                    <td>
+                        <div class="dim-bar-container">
+                            <div class="dim-bar" style="width:{{ (dim.average / 10 * 100)|int }}%; background:{% if dim.average < 3.0 %}#dc3545{% elif dim.average < 5.0 %}#e67e22{% elif dim.average < 7.0 %}#f0ad4e{% else %}#28a745{% endif %};"></div>
+                            <span class="dim-bar-label">{{ "%.1f"|format(dim.average) }}</span>
+                        </div>
+                    </td>
+                    <td class="num {% if dim.average < 3.0 %}score-critical{% elif dim.average < 5.0 %}score-warning{% elif dim.average < 7.0 %}score-fair{% else %}score-good{% endif %}">
+                        {{ "%.1f"|format(dim.average) }} / 10
+                    </td>
+                    <td class="num">{{ dim.count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+    {% endif %}
+
+</main>
+
+<footer>
+    <p>Generated by Codebase Analyzer &mdash; SLT Portfolio Report</p>
+</footer>
+
+</body>
+</html>

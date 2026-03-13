@@ -15,7 +15,7 @@
     .gauge-container .score-number {
         font-size: 3rem;
         font-weight: 700;
-        margin-top: -2rem;
+        margin-top: 0.5rem;
     }
 
     .gauge-container .rating-label {
@@ -126,7 +126,7 @@
 <div class="exec-grid">
     <div class="gauge-container">
         <h3>Overall Health</h3>
-        <canvas id="gaugeChart" width="280" height="160"></canvas>
+        <canvas id="gaugeChart" width="280" height="160" style="display:none;"></canvas>
         <div class="score-number {% if report_data.rating == 'Excellent' %}rating-excellent{% elif report_data.rating == 'Good' %}rating-good{% elif report_data.rating == 'Needs Attention' %}rating-needs-attention{% else %}rating-critical{% endif %}" style="background:none;">
             {{ "%.1f"|format(report_data.overall_score) }}<span style="font-size:1.4rem;font-weight:400;opacity:0.6"> / 100</span>
         </div>
@@ -137,12 +137,12 @@
         </div>
     </div>
     <div class="radar-container">
-        <canvas id="radarChart" width="320" height="320"></canvas>
+        <canvas id="radarChart" width="320" height="320" style="display:none;"></canvas>
     </div>
 </div>
 
 <!-- Dimension Score Bars -->
-<div class="bars-container">
+<div class="bars-container" style="display:none;">
     <h3>Dimension Scores</h3>
     <canvas id="dimensionBarsChart" width="600" height="250"></canvas>
 </div>
@@ -174,18 +174,66 @@
 </div>
 {% endif %}
 
+<!-- Dimension Scores Table -->
+<h3>Dimension Scores at a Glance</h3>
+<table style="width:100%; border-collapse:collapse; margin-bottom:1.5rem; font-size:0.9rem;">
+    <thead>
+        <tr style="background:#f0f0f0;">
+            <th style="text-align:left; padding:0.5rem; border-bottom:2px solid #ccc;">Dimension</th>
+            <th style="text-align:right; padding:0.5rem; border-bottom:2px solid #ccc;">Score</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for dim in report_data.dimensions|sort(attribute='normalized_score') %}
+        <tr>
+            <td style="padding:0.4rem 0.5rem; border-bottom:1px solid #eee;">{{ dim.name|replace('_', ' ')|title }}</td>
+            <td style="text-align:right; padding:0.4rem 0.5rem; border-bottom:1px solid #eee; font-weight:700; color:{% if dim.normalized_score < 3.0 %}#dc3545{% elif dim.normalized_score < 5.0 %}#e67e22{% elif dim.normalized_score < 7.0 %}#f0ad4e{% else %}#28a745{% endif %};">{{ "%.1f"|format(dim.normalized_score) }} / 10</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Top Critical Findings -->
+{% if report_data.agent_results %}
+{% set critical_findings = [] %}
+{% for agent_key, agent_data in report_data.agent_results.items() %}
+    {% if agent_data is mapping %}
+        {% set rd = agent_data.get('risk_distribution', {}) %}
+        {% if rd is mapping and rd.get('critical', 0) > 0 %}
+            {% for rec in agent_data.get('recommendations', [])[:2] %}
+                {% if critical_findings|length < 6 %}
+                    {% if critical_findings.append(rec.get('title', rec) if rec is mapping else rec) %}{% endif %}
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endif %}
+{% endfor %}
+{% if critical_findings %}
+<div class="weakest-callout">
+    <div class="callout-title">[!] Top Critical Findings</div>
+    <div class="callout-body">
+        <ol style="margin:0; padding-left:1.2rem;">
+            {% for finding in critical_findings %}
+            <li><strong>{{ finding }}</strong></li>
+            {% endfor %}
+        </ol>
+    </div>
+</div>
+{% endif %}
+{% endif %}
+
 <!-- Chart.js initialization scripts -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof Chart === 'undefined') return;
-
-    var gaugeConfig = {{ gauge_config_json|safe }};
-    var radarConfig = {{ radar_config_json|safe }};
-    var barsConfig = {{ bars_config_json|safe }};
-
-    new Chart(document.getElementById('gaugeChart'), gaugeConfig);
-    new Chart(document.getElementById('radarChart'), radarConfig);
-    new Chart(document.getElementById('dimensionBarsChart'), barsConfig);
+    try {
+        var gaugeConfig = {{ gauge_config_json|safe }};
+        var radarConfig = {{ radar_config_json|safe }};
+        var barsConfig = {{ bars_config_json|safe }};
+        if (gaugeConfig) { document.getElementById('gaugeChart').style.display=''; new Chart(document.getElementById('gaugeChart'), gaugeConfig); }
+        if (radarConfig) { document.getElementById('radarChart').style.display=''; new Chart(document.getElementById('radarChart'), radarConfig); }
+        if (barsConfig) { document.querySelector('.bars-container').style.display=''; new Chart(document.getElementById('dimensionBarsChart'), barsConfig); }
+    } catch(e) {}
 });
 </script>
 {% endmacro %}
