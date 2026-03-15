@@ -36,8 +36,8 @@ print_usage() {
     echo "Usage: $0 [command]"
     echo ""
     echo "Commands:"
-    echo "  install       Install the agent and command (default)"
-    echo "  uninstall     Remove the agent and command"
+    echo "  install       Install the agent and commands (default)"
+    echo "  uninstall     Remove the agent and commands"
     echo "  status        Show installation status"
     echo ""
     echo "Options:"
@@ -57,12 +57,15 @@ check_status() {
         echo -e "  ${RED}✗${NC} Agent definition not installed"
     fi
 
-    local command_path="$CLAUDE_COMMANDS_DIR/alf-analyze.md"
-    if [[ -f "$command_path" ]]; then
-        echo -e "  ${GREEN}✓${NC} Global command installed at $command_path"
-    else
-        echo -e "  ${RED}✗${NC} Global command not installed"
-    fi
+    local commands=("alf-analyze" "alf-slt-report" "alf-summary-report")
+    for cmd in "${commands[@]}"; do
+        local cmd_path="$CLAUDE_COMMANDS_DIR/${cmd}.md"
+        if [[ -f "$cmd_path" ]]; then
+            echo -e "  ${GREEN}✓${NC} /${cmd} command installed at $cmd_path"
+        else
+            echo -e "  ${RED}✗${NC} /${cmd} command not installed"
+        fi
+    done
     echo ""
 }
 
@@ -103,11 +106,23 @@ do_install() {
         "agent definition" \
         "$force"
 
-    # Install global command to ~/.claude/commands/
+    # Install commands to ~/.claude/commands/
     install_file \
         "$SCRIPT_DIR/alf-codebase-analyzer.md" \
         "$CLAUDE_COMMANDS_DIR/alf-analyze.md" \
-        "global /alf-analyze command" \
+        "/alf-analyze command" \
+        "$force"
+
+    install_file \
+        "$SCRIPT_DIR/commands/alf-slt-report.md" \
+        "$CLAUDE_COMMANDS_DIR/alf-slt-report.md" \
+        "/alf-slt-report command" \
+        "$force"
+
+    install_file \
+        "$SCRIPT_DIR/commands/alf-summary-report.md" \
+        "$CLAUDE_COMMANDS_DIR/alf-summary-report.md" \
+        "/alf-summary-report command" \
         "$force"
 
     echo ""
@@ -116,6 +131,8 @@ do_install() {
     echo "The agent is now available in Claude Code as:"
     echo -e "  ${BLUE}alf-codebase-analyzer${NC}  (via Agent tool)"
     echo -e "  ${BLUE}/alf-analyze${NC}           (via slash command)"
+    echo -e "  ${BLUE}/alf-slt-report${NC}        (via slash command)"
+    echo -e "  ${BLUE}/alf-summary-report${NC}    (via slash command)"
     echo ""
     echo "Restart Claude Code or start a new session to use the agent."
     echo ""
@@ -133,13 +150,16 @@ do_uninstall() {
         echo -e "  ${YELLOW}!${NC} Agent definition was not installed"
     fi
 
-    local command_path="$CLAUDE_COMMANDS_DIR/alf-analyze.md"
-    if [[ -f "$command_path" ]]; then
-        rm "$command_path"
-        echo -e "  ${GREEN}✓${NC} Removed global command"
-    else
-        echo -e "  ${YELLOW}!${NC} Global command was not installed"
-    fi
+    local commands=("alf-analyze" "alf-slt-report" "alf-summary-report")
+    for cmd in "${commands[@]}"; do
+        local cmd_path="$CLAUDE_COMMANDS_DIR/${cmd}.md"
+        if [[ -f "$cmd_path" ]]; then
+            rm "$cmd_path"
+            echo -e "  ${GREEN}✓${NC} Removed /${cmd} command"
+        else
+            echo -e "  ${YELLOW}!${NC} /${cmd} command was not installed"
+        fi
+    done
 
     echo ""
     echo -e "${GREEN}Uninstallation complete!${NC}"

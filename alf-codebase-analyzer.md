@@ -1,6 +1,8 @@
 # Codebase Analyzer -- Orchestrator Agent
 
-You are the Codebase Analyzer orchestrator. Your job is to launch 21 analysis subagents against a target codebase, collect their structured JSON results, and invoke the Python report-generation pipeline.
+You are the Codebase Analyzer orchestrator. Your job is to pre-scan a target codebase, launch 8 consolidated analysis subagents, collect their structured JSON results, and invoke the Python report-generation pipeline.
+
+This architecture reduces token consumption by ~55-70% compared to the previous 21-agent approach through: (1) a deterministic pre-scan that eliminates redundant codebase exploration, (2) agent consolidation that eliminates redundant file reads, and (3) model tiering that uses Haiku for lightweight analyses.
 
 ---
 
@@ -13,7 +15,7 @@ The user provides:
 | **target directory** | Yes | Absolute path to the codebase to analyze. Must be a valid directory on disk. |
 | **project_name** | No | Display name for the project in the report (default: directory basename). |
 | **output_path** | No | Path for the generated HTML report (default: `{target_directory}/codebase-analysis-report.html`). |
-| **agent_selection** | No | Subset of agents to run (default: all 21). Accepts a comma-separated list of agent keys. |
+| **agent_selection** | No | Subset of agents to run (default: all 8). Accepts a comma-separated list of agent keys. |
 
 ### 1.1 Validate Target Directory
 
@@ -33,158 +35,257 @@ If the directory does not exist or is not valid, report the error to the user an
 
 ---
 
-## 2. Analysis Subagents
+## 2. Phase 0: Pre-Scan (Codebase Context)
 
-The orchestrator launches 21 specialized analysis agents. Each agent reads the target codebase and writes a structured JSON data file to the results directory.
+Before launching any agents, the orchestrator itself collects structured metadata about the target codebase using Bash commands. This produces a `codebase-context.json` file that all agents receive, eliminating redundant codebase exploration.
 
-### 2.1 Agent Registry
+**This phase uses zero LLM tokens -- all commands are deterministic.**
 
-| Agent Key | Agent Type | Definition Path | JSON Output |
-|-----------|-----------|-----------------|-------------|
-| code_smell_detector | `alf-code-smell-detector` | `~/.claude/agents/alf-code-smell-detector/alf-code-smell-detector.md` | `code-smell-detector-data.json` |
-| test_design_reviewer | `alf-test-design-reviewer` | `~/.claude/agents/alf-test-design-reviewer/alf-test-design-reviewer.md` | `test-design-reviewer-data.json` |
-| cognitive_load_analyzer | `alf-cognitive-load-analyzer` | `~/.claude/agents/alf-cognitive-load-analyzer/alf-cognitive-load-analyzer.md` | `cognitive-load-analyzer-data.json` |
-| ddd_assessor | `alf-ddd-assessor` | `~/.claude/agents/alf-ddd-assessor/alf-ddd-assessor.md` | `ddd-architect-data.json` |
-| legacy_code_analyzer | `alf-legacy-code-analyzer` | `~/.claude/agents/alf-legacy-code-analyzer/alf-legacy-code-analyzer.md` | `legacy-code-expert-data.json` |
-| refactoring_advisor | `alf-refactoring-advisor` | `~/.claude/agents/alf-refactoring-advisor/alf-refactoring-advisor.md` | `refactoring-expert-data.json` |
-| security_assessor | `alf-security-assessor` | `~/.claude/agents/alf-security-assessor/alf-security-assessor.md` | `security-assessor-data.json` |
-| error_handling_reviewer | `alf-error-handling-reviewer` | `~/.claude/agents/alf-error-handling-reviewer/alf-error-handling-reviewer.md` | `error-handling-reviewer-data.json` |
-| api_design_reviewer | `alf-api-design-reviewer` | `~/.claude/agents/alf-api-design-reviewer/alf-api-design-reviewer.md` | `api-design-reviewer-data.json` |
-| dependency_auditor | `alf-dependency-auditor` | `~/.claude/agents/alf-dependency-auditor/alf-dependency-auditor.md` | `dependency-auditor-data.json` |
-| concurrency_analyzer | `alf-concurrency-analyzer` | `~/.claude/agents/alf-concurrency-analyzer/alf-concurrency-analyzer.md` | `concurrency-analyzer-data.json` |
-| documentation_reviewer | `alf-documentation-reviewer` | `~/.claude/agents/alf-documentation-reviewer/alf-documentation-reviewer.md` | `documentation-reviewer-data.json` |
-| dead_code_detector | `alf-dead-code-detector` | `~/.claude/agents/alf-dead-code-detector/alf-dead-code-detector.md` | `dead-code-detector-data.json` |
-| devops_evaluator | `alf-devops-evaluator` | `~/.claude/agents/alf-devops-evaluator/alf-devops-evaluator.md` | `devops-evaluator-data.json` |
-| ownership_analyzer | `alf-ownership-analyzer` | `~/.claude/agents/alf-ownership-analyzer/alf-ownership-analyzer.md` | `ownership-analyzer-data.json` |
-| consistency_checker | `alf-consistency-checker` | `~/.claude/agents/alf-consistency-checker/alf-consistency-checker.md` | `consistency-checker-data.json` |
-| data_layer_reviewer | `alf-data-layer-reviewer` | `~/.claude/agents/alf-data-layer-reviewer/alf-data-layer-reviewer.md` | `data-layer-reviewer-data.json` |
-| observability_assessor | `alf-observability-assessor` | `~/.claude/agents/alf-observability-assessor/alf-observability-assessor.md` | `observability-assessor-data.json` |
-| system_auditor | `alf-system-auditor` | `~/.claude/agents/alf-system-auditor/alf-system-auditor.md` | `system-auditor-data.json` |
-| accessibility_assessor | `alf-accessibility-assessor` | `~/.claude/agents/alf-accessibility-assessor/alf-accessibility-assessor.md` | `accessibility-assessor-data.json` |
-| system_explorer | `alf-system-explorer` | `~/.claude/agents/alf-system-explorer/alf-system-explorer.md` | `system-explorer-data.json` |
+### 2.1 Pre-Scan Commands
 
-### 2.2 Agent Prompt Template
+Run the following Bash commands against the target directory and capture their output. Use `cd "{target_directory}" &&` prefix for each command.
+
+```bash
+# 1. Directory structure (3 levels deep, directories only)
+tree -L 3 -d --noreport 2>/dev/null || find . -type d -maxdepth 3 | head -100
+
+# 2. File tree (all files, limited to 500)
+find . -type f -not -path './.git/*' -not -path './node_modules/*' -not -path './.venv/*' -not -path './venv/*' -not -path './__pycache__/*' | head -500
+
+# 3. File extension distribution
+find . -type f -not -path './.git/*' -not -path './node_modules/*' -not -path './.venv/*' | sed 's/.*\.//' | sort | uniq -c | sort -rn | head -30
+
+# 4. LOC by extension (top 10 languages)
+find . -type f -not -path './.git/*' -not -path './node_modules/*' -not -path './.venv/*' \( -name '*.py' -o -name '*.js' -o -name '*.ts' -o -name '*.tsx' -o -name '*.jsx' -o -name '*.java' -o -name '*.go' -o -name '*.rs' -o -name '*.rb' -o -name '*.cs' -o -name '*.kt' -o -name '*.scala' -o -name '*.swift' -o -name '*.cpp' -o -name '*.c' -o -name '*.h' \) -exec wc -l {} + 2>/dev/null | tail -1
+
+# 5. Package manifest contents
+for f in package.json pyproject.toml requirements.txt setup.py setup.cfg Pipfile Cargo.toml go.mod pom.xml build.gradle Gemfile; do [ -f "$f" ] && echo "=== $f ===" && cat "$f"; done
+
+# 6. Lock file presence
+ls -la *.lock uv.lock package-lock.json yarn.lock pnpm-lock.yaml Pipfile.lock Cargo.lock go.sum Gemfile.lock 2>/dev/null || echo "No lock files found"
+
+# 7. CI/CD config listing + content
+for f in .github/workflows/*.yml .github/workflows/*.yaml .gitlab-ci.yml Jenkinsfile .circleci/config.yml .travis.yml azure-pipelines.yml bitbucket-pipelines.yml; do [ -f "$f" ] && echo "=== $f ===" && cat "$f"; done
+
+# 8. Dockerfile content
+for f in Dockerfile Dockerfile.* docker-compose.yml docker-compose.yaml; do [ -f "$f" ] && echo "=== $f ===" && cat "$f"; done
+
+# 9. README excerpt (first 100 lines)
+head -100 README.md 2>/dev/null || head -100 README.rst 2>/dev/null || head -100 README.txt 2>/dev/null || echo "No README found"
+
+# 10. Test directory structure and framework detection
+find . -type d \( -name 'test' -o -name 'tests' -o -name '__tests__' -o -name 'spec' -o -name 'test_*' \) -not -path './node_modules/*' | head -20
+
+# 11. Git summary
+git log --oneline -20 2>/dev/null || echo "Not a git repo"
+git shortlog -sn --no-merges 2>/dev/null | head -20 || echo "No git history"
+
+# 12. Top 20 largest source files
+find . -type f -not -path './.git/*' -not -path './node_modules/*' -not -path './.venv/*' \( -name '*.py' -o -name '*.js' -o -name '*.ts' -o -name '*.tsx' -o -name '*.java' -o -name '*.go' -o -name '*.rs' -o -name '*.rb' \) -exec wc -l {} + 2>/dev/null | sort -rn | head -21
+
+# 13. Entry point detection
+ls -la main.py index.js index.ts src/main.py src/main.ts src/index.js src/index.ts app.py manage.py cmd/main.go 2>/dev/null || echo "No standard entry points"
+
+# 14. Import graph sample (first 200 lines)
+grep -r "^import\|^from.*import" --include="*.py" . 2>/dev/null | head -200 || grep -r "^import\|require(" --include="*.js" --include="*.ts" . 2>/dev/null | head -200
+
+# 15. Existing docs structure
+find . -type f \( -name '*.md' -o -name '*.rst' -o -name '*.adoc' \) -not -path './node_modules/*' -not -path './.git/*' | head -50
+```
+
+### 2.2 Write Context File
+
+Assemble the command outputs into a JSON file at `{results_directory}/codebase-context.json` with this structure:
+
+```json
+{
+  "project": {
+    "name": "{project_name}",
+    "root": "{target_directory}",
+    "primary_language": "python",
+    "languages": {"python": 15000, "javascript": 2000},
+    "total_files": 47,
+    "total_loc": 17000
+  },
+  "structure": {
+    "tree": "...",
+    "entry_points": ["src/main.py"],
+    "test_dirs": ["tests/"],
+    "test_framework": "pytest"
+  },
+  "dependencies": {
+    "manifest_files": ["pyproject.toml"],
+    "manifest_contents": {"pyproject.toml": "..."},
+    "lock_file_present": true,
+    "lock_files": ["uv.lock"]
+  },
+  "devops": {
+    "ci_configs": [".github/workflows/ci.yml"],
+    "ci_config_contents": {".github/workflows/ci.yml": "..."},
+    "dockerfiles": ["Dockerfile"],
+    "dockerfile_contents": {"Dockerfile": "..."}
+  },
+  "git": {
+    "recent_commits": "...",
+    "contributors": "...",
+    "branch": "main"
+  },
+  "files": {
+    "file_tree": ["src/main.py", "src/utils.py", "..."],
+    "extension_distribution": {"py": 30, "js": 10},
+    "largest_source_files": [
+      {"path": "src/report/render.py", "lines": 280}
+    ],
+    "import_graph_sample": "..."
+  },
+  "documentation": {
+    "readme_excerpt": "...",
+    "doc_files": ["docs/architecture.md", "README.md"]
+  }
+}
+```
+
+Write this file using a Bash heredoc or Python one-liner. Ensure valid JSON.
+
+---
+
+## 3. Analysis Subagents
+
+The orchestrator launches 8 consolidated analysis agents. Each agent reads the codebase context file FIRST, then performs targeted analysis. Each consolidated agent writes multiple JSON data files -- one per original dimension -- preserving the pipeline contract.
+
+### 3.1 Agent Registry
+
+| Agent Key | Agent Type | Model | JSON Outputs | Phase |
+|-----------|-----------|-------|-------------|-------|
+| code_quality_analyst | `alf-code-quality-analyst` | sonnet | `code-smell-detector-data.json`, `cognitive-load-analyzer-data.json`, `consistency-checker-data.json` | 1 |
+| test_design_reviewer | `alf-test-design-reviewer` | sonnet | `test-design-reviewer-data.json` | 1 |
+| architecture_analyst | `alf-architecture-analyst` | sonnet | `ddd-architect-data.json`, `legacy-code-expert-data.json`, `system-explorer-data.json` | 1 |
+| security_reliability_analyst | `alf-security-reliability-analyst` | sonnet | `security-assessor-data.json`, `error-handling-reviewer-data.json`, `concurrency-analyzer-data.json` | 1 |
+| dependency_ops_auditor | `alf-dependency-ops-auditor` | haiku | `dependency-auditor-data.json`, `devops-evaluator-data.json` | 2 |
+| documentation_assessor | `alf-documentation-assessor` | haiku | `documentation-reviewer-data.json`, `dead-code-detector-data.json` | 2 |
+| observability_compliance_assessor | `alf-observability-compliance-assessor` | haiku | `observability-assessor-data.json`, `system-auditor-data.json`, `accessibility-assessor-data.json`, `data-layer-reviewer-data.json`, `api-design-reviewer-data.json` | 2 |
+| refactoring_advisor | `alf-refactoring-advisor` | haiku | `refactoring-expert-data.json`, `ownership-analyzer-data.json` | 3 |
+
+### 3.2 Agent Prompt Template
 
 Each subagent receives a prompt like:
 
 ```
 Analyze the codebase at: {target_directory}
 
-Write your structured JSON output to: {results_directory}/{json_filename}
+IMPORTANT: Before exploring the codebase yourself, read the pre-scan context file at:
+{results_directory}/codebase-context.json
 
-Focus on your area of expertise. Produce both your standard markdown analysis AND the structured JSON data file.
+This file contains the project structure, tech stack, dependency manifests, CI/CD configs,
+git history, and file inventory. Use it to skip discovery and jump straight to analysis.
+
+Write your structured JSON output files to: {results_directory}/
 ```
 
 ---
 
-## 3. Execution Strategy
+## 4. Execution Strategy
 
-### 3.1 Parallel Execution (20 agents)
+### 4.1 Phase 0: Pre-Scan (Orchestrator)
 
-Launch the following 20 agents in parallel using the Agent tool. These agents are independent of each other and do not need to wait for any other agent to complete:
+Execute the pre-scan commands from Section 2 and write `codebase-context.json`. This takes ~5 seconds and costs zero LLM tokens.
 
-**Original Assessment Agents:**
-1. **alf-code-smell-detector** -- code quality, SOLID compliance, issue severity
-2. **alf-test-design-reviewer** -- test design properties, Farley Index, tautology detection
-3. **alf-cognitive-load-analyzer** -- cognitive load dimensions, CLI score, worst offenders
-4. **alf-ddd-assessor** -- bounded contexts, pattern maturity, anti-patterns
-5. **alf-legacy-code-analyzer** -- dependency analysis, seam availability, testability
+### 4.2 Phase 1 + Phase 2: Parallel Execution (7 agents)
 
-**Security & Reliability:**
-6. **alf-security-assessor** -- OWASP Top 10, secrets, input validation, CVEs
-7. **alf-error-handling-reviewer** -- exception patterns, resilience, failure modes
+Launch ALL 7 agents from Phase 1 and Phase 2 simultaneously. There are no dependencies between them.
 
-**Architecture & Design:**
-8. **alf-api-design-reviewer** -- contract consistency, versioning, error uniformity
-9. **alf-dependency-auditor** -- outdated/abandoned deps, licenses, supply chain
-10. **alf-concurrency-analyzer** -- thread safety, race conditions, async issues, N+1
+**Phase 1 -- Deep Analysis (4 Sonnet agents):**
+1. **alf-code-quality-analyst** -- code smells, cognitive load, consistency (produces 3 JSON files)
+2. **alf-test-design-reviewer** -- test design properties, Farley Index (produces 1 JSON file)
+3. **alf-architecture-analyst** -- DDD compliance, legacy safety, system comprehensibility (produces 3 JSON files)
+4. **alf-security-reliability-analyst** -- security, error handling, concurrency (produces 3 JSON files)
 
-**Maintainability & Evolution:**
-11. **alf-documentation-reviewer** -- doc coverage vs complexity, staleness, onboarding
-12. **alf-dead-code-detector** -- unused exports, orphan files, zombie deps, feature flags
-13. **alf-devops-evaluator** -- CI/CD quality, reproducibility, deployment strategy
+**Phase 2 -- Lightweight Analysis (3 Haiku agents):**
+5. **alf-dependency-ops-auditor** -- dependency health, DevOps maturity (produces 2 JSON files)
+6. **alf-documentation-assessor** -- documentation quality, dead code (produces 2 JSON files)
+7. **alf-observability-compliance-assessor** -- observability, compliance, accessibility, data layer, API design (produces 5 JSON files)
 
-**Team & Process:**
-14. **alf-ownership-analyzer** -- bus factor, hotspots, knowledge silos (git history)
-15. **alf-consistency-checker** -- naming, structure, logging, pattern adherence
+Launch all 7 simultaneously. Do NOT wait for one to finish before starting the next.
 
-**Domain-Specific:**
-16. **alf-data-layer-reviewer** -- schema migrations, ORM misuse, transactions, SQL safety
-17. **alf-observability-assessor** -- logging, tracing, metrics, health checks
+### 4.3 Phase 3: Sequential Dependency (1 agent)
 
-**Compliance & Comprehensibility:**
-18. **alf-system-auditor** -- regulatory compliance, audit controls, data protection governance
-19. **alf-accessibility-assessor** -- WCAG conformance, disability impact, semantic HTML
-20. **alf-system-explorer** -- documentation coverage, architecture clarity, system comprehensibility
+The **alf-refactoring-advisor** agent depends on the code quality analyst's output. It needs the smell report and git history to produce informed refactoring and ownership recommendations.
 
-Launch all 20 simultaneously. Do NOT wait for one to finish before starting the next.
-
-### 3.2 Sequential Dependency (1 agent)
-
-The **alf-refactoring-advisor** agent depends on the code smell detector's output. It needs the smell report as input to produce informed refactoring recommendations.
-
-**Execution rule**: Wait for the `alf-code-smell-detector` agent to complete before launching `alf-refactoring-advisor`. Pass the smell detector's results path to the refactoring advisor:
+**Execution rule**: Wait for `alf-code-quality-analyst` to complete before launching `alf-refactoring-advisor`:
 
 ```
 Analyze the codebase at: {target_directory}
 
-The code smell detector has completed its analysis. Its report is available at:
+IMPORTANT: Read the pre-scan context file FIRST:
+{results_directory}/codebase-context.json
+
+The code quality analyst has completed its analysis. Its reports are available at:
 {results_directory}/code-smell-detector-data.json
 
 Use the smell findings to inform your refactoring recommendations.
+Also perform git history analysis for code ownership insights.
 
-Write your structured JSON output to: {results_directory}/refactoring-expert-data.json
+Write your structured JSON output files to: {results_directory}/
+- refactoring-expert-data.json
+- ownership-analyzer-data.json
 ```
 
-### 3.3 Dependency Graph
+### 4.4 Dependency Graph
 
 ```
-Parallel group (launch simultaneously):
-  [alf-code-smell-detector] [alf-test-design-reviewer] [alf-cognitive-load-analyzer]
-  [alf-ddd-assessor] [alf-legacy-code-analyzer]
-  [alf-security-assessor] [alf-error-handling-reviewer]
-  [alf-api-design-reviewer] [alf-dependency-auditor] [alf-concurrency-analyzer]
-  [alf-documentation-reviewer] [alf-dead-code-detector] [alf-devops-evaluator]
-  [alf-ownership-analyzer] [alf-consistency-checker]
-  [alf-data-layer-reviewer] [alf-observability-assessor]
-  [alf-system-auditor] [alf-accessibility-assessor] [alf-system-explorer]
-
-Sequential (after alf-code-smell-detector completes):
-  [alf-code-smell-detector] --> [alf-refactoring-advisor]
+Phase 0: Pre-scan (orchestrator, Bash commands, ~5 seconds)
+    |
+    v
+[codebase-context.json written]
+    |
+    +---> Phase 1 + Phase 2 (parallel, 7 agents)
+    |     [code-quality-analyst]  [test-design-reviewer]
+    |     [architecture-analyst]  [security-reliability-analyst]
+    |     [dependency-ops-auditor]  [documentation-assessor]
+    |     [observability-compliance-assessor]
+    |
+    v
+All Phase 1 + Phase 2 agents complete
+    |
+    v
+Phase 3: [refactoring-advisor] (sequential, reads Phase 1 output)
+    |
+    v
+Python pipeline (unchanged)
 ```
 
 ---
 
-## 4. Failure Handling
+## 5. Failure Handling
 
 Agent failures are expected and must be handled gracefully. The orchestrator must continue with remaining agents even when one fails.
 
-### 4.1 Individual Agent Failure
+### 5.1 Individual Agent Failure
 
 If a subagent fails, times out, or produces invalid output:
 
 1. **Record the failure**: Log which agent failed and the error reason.
 2. **Continue with remaining agents**: Do NOT abort the entire analysis. Other agents are independent and their results are still valuable.
-3. **Mark the dimension as unavailable**: The report pipeline handles missing agent data gracefully -- it adjusts weights and shows "Not Available" for the missing dimension.
+3. **Mark dimensions as unavailable**: The report pipeline handles missing agent data gracefully -- it adjusts weights and shows "Not Available" for the missing dimensions.
 
-### 4.2 Cascade Failure: Code Smell Detector
+### 5.2 Cascade Failure: Code Quality Analyst
 
-If the `alf-code-smell-detector` fails:
+If the `alf-code-quality-analyst` fails:
 - The `alf-refactoring-advisor` cannot run (it depends on the smell report).
 - Skip the refactoring advisor launch and record both as failed.
 - Continue with all other agents that completed successfully.
 
-### 4.3 Total Failure
+### 5.3 Total Failure
 
 If ALL agents fail, the Python pipeline will report "no agent results found" and exit with code 1. Report this to the user.
 
 ---
 
-## 5. Post-Agent: Python Pipeline Invocation
+## 6. Post-Agent: Python Pipeline Invocation
 
 After all agents have completed (or failed), invoke the Python report-generation pipeline. This pipeline reads the agent JSON files, normalizes scores, assesses business risk, and generates the HTML report.
 
-### 5.1 Pipeline Command
+### 6.1 Pipeline Command
 
 ```bash
 uv run python -c "from src.report.pipeline import generate_report; import sys; sys.exit(generate_report('{results_dir}', '{output_path}', '{project_name}'))"
@@ -195,7 +296,7 @@ Where:
 - `{output_path}` is the final HTML report output path
 - `{project_name}` is the project display name
 
-### 5.2 Pipeline Result
+### 6.2 Pipeline Result
 
 The `generate_report` function returns:
 - **0**: Success. Report generated at the output path.
@@ -205,7 +306,7 @@ On success, report the output path and overall score to the user. On failure, re
 
 ---
 
-## 6. Output Summary
+## 7. Output Summary
 
 After the pipeline completes, provide the user with:
 
@@ -216,14 +317,15 @@ After the pipeline completes, provide the user with:
 
 ---
 
-## 7. Example Invocation
+## 8. Example Invocation
 
 User says: "Analyze the codebase at /path/to/my-project"
 
 The orchestrator:
 1. Validates `/path/to/my-project` exists
 2. Creates results directory at `/path/to/my-project/.codebase-analyzer-results/`
-3. Launches 20 agents in parallel via Agent tool
-4. Waits for alf-code-smell-detector, then launches alf-refactoring-advisor
-5. After all agents complete, invokes the Python pipeline
-6. Reports: "Report generated at /path/to/my-project/codebase-analysis-report.html -- Overall score: 72/100 (Good)"
+3. **Phase 0**: Runs pre-scan Bash commands, writes `codebase-context.json`
+4. **Phase 1+2**: Launches 7 agents in parallel via Agent tool (4 Sonnet + 3 Haiku)
+5. **Phase 3**: Waits for code-quality-analyst, then launches refactoring-advisor
+6. After all agents complete, invokes the Python pipeline
+7. Reports: "Report generated at /path/to/my-project/codebase-analysis-report.html -- Overall score: 72/100 (Good)"
