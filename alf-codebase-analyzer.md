@@ -43,55 +43,43 @@ Before launching any agents, the orchestrator itself collects structured metadat
 
 ### 2.1 Pre-Scan Commands
 
-Run the following Bash commands against the target directory and capture their output. Use `cd "{target_directory}" &&` prefix for each command.
+Run ALL pre-scan commands in a **single Bash tool call** to minimize tool invocations. Use the script below exactly as-is, substituting `{target_directory}` with the actual path. Each section is delimited by `###SECTION_N###` markers for parsing.
 
 ```bash
-# 1. Directory structure (3 levels deep, directories only)
-tree -L 3 -d --noreport 2>/dev/null || find . -type d -maxdepth 3 | head -100
-
-# 2. File tree (all files, limited to 500)
-find . -type f -not -path './.git/*' -not -path './node_modules/*' -not -path './.venv/*' -not -path './venv/*' -not -path './__pycache__/*' | head -500
-
-# 3. File extension distribution
-find . -type f -not -path './.git/*' -not -path './node_modules/*' -not -path './.venv/*' | sed 's/.*\.//' | sort | uniq -c | sort -rn | head -30
-
-# 4. LOC by extension (top 10 languages)
-find . -type f -not -path './.git/*' -not -path './node_modules/*' -not -path './.venv/*' \( -name '*.py' -o -name '*.js' -o -name '*.ts' -o -name '*.tsx' -o -name '*.jsx' -o -name '*.java' -o -name '*.go' -o -name '*.rs' -o -name '*.rb' -o -name '*.cs' -o -name '*.kt' -o -name '*.scala' -o -name '*.swift' -o -name '*.cpp' -o -name '*.c' -o -name '*.h' \) -exec wc -l {} + 2>/dev/null | tail -1
-
-# 5. Package manifest contents
-for f in package.json pyproject.toml requirements.txt setup.py setup.cfg Pipfile Cargo.toml go.mod pom.xml build.gradle Gemfile; do [ -f "$f" ] && echo "=== $f ===" && cat "$f"; done
-
-# 6. Lock file presence
-ls -la *.lock uv.lock package-lock.json yarn.lock pnpm-lock.yaml Pipfile.lock Cargo.lock go.sum Gemfile.lock 2>/dev/null || echo "No lock files found"
-
-# 7. CI/CD config listing + content
-for f in .github/workflows/*.yml .github/workflows/*.yaml .gitlab-ci.yml Jenkinsfile .circleci/config.yml .travis.yml azure-pipelines.yml bitbucket-pipelines.yml; do [ -f "$f" ] && echo "=== $f ===" && cat "$f"; done
-
-# 8. Dockerfile content
-for f in Dockerfile Dockerfile.* docker-compose.yml docker-compose.yaml; do [ -f "$f" ] && echo "=== $f ===" && cat "$f"; done
-
-# 9. README excerpt (first 100 lines)
-head -100 README.md 2>/dev/null || head -100 README.rst 2>/dev/null || head -100 README.txt 2>/dev/null || echo "No README found"
-
-# 10. Test directory structure and framework detection
-find . -type d \( -name 'test' -o -name 'tests' -o -name '__tests__' -o -name 'spec' -o -name 'test_*' \) -not -path './node_modules/*' | head -20
-
-# 11. Git summary
-git log --oneline -20 2>/dev/null || echo "Not a git repo"
-git shortlog -sn --no-merges 2>/dev/null | head -20 || echo "No git history"
-
-# 12. Top 20 largest source files
-find . -type f -not -path './.git/*' -not -path './node_modules/*' -not -path './.venv/*' \( -name '*.py' -o -name '*.js' -o -name '*.ts' -o -name '*.tsx' -o -name '*.java' -o -name '*.go' -o -name '*.rs' -o -name '*.rb' \) -exec wc -l {} + 2>/dev/null | sort -rn | head -21
-
-# 13. Entry point detection
-ls -la main.py index.js index.ts src/main.py src/main.ts src/index.js src/index.ts app.py manage.py cmd/main.go 2>/dev/null || echo "No standard entry points"
-
-# 14. Import graph sample (first 200 lines)
-grep -r "^import\|^from.*import" --include="*.py" . 2>/dev/null | head -200 || grep -r "^import\|require(" --include="*.js" --include="*.ts" . 2>/dev/null | head -200
-
-# 15. Existing docs structure
+cd "{target_directory}" && echo "###SECTION_1### Directory structure" && \
+(tree -L 3 -d --noreport 2>/dev/null || find . -type d -maxdepth 3 | head -100) && \
+echo "###SECTION_2### File tree" && \
+find . -type f -not -path './.git/*' -not -path './node_modules/*' -not -path './.venv/*' -not -path './venv/*' -not -path './__pycache__/*' | head -500 && \
+echo "###SECTION_3### File extension distribution" && \
+(find . -type f -not -path './.git/*' -not -path './node_modules/*' -not -path './.venv/*' | sed 's/.*\.//' | sort | uniq -c | sort -rn | head -30) && \
+echo "###SECTION_4### LOC by extension" && \
+(find . -type f -not -path './.git/*' -not -path './node_modules/*' -not -path './.venv/*' \( -name '*.py' -o -name '*.js' -o -name '*.ts' -o -name '*.tsx' -o -name '*.jsx' -o -name '*.java' -o -name '*.go' -o -name '*.rs' -o -name '*.rb' -o -name '*.cs' -o -name '*.kt' -o -name '*.scala' -o -name '*.swift' -o -name '*.cpp' -o -name '*.c' -o -name '*.h' \) -exec wc -l {} + 2>/dev/null | tail -1) && \
+echo "###SECTION_5### Package manifests" && \
+(for f in package.json pyproject.toml requirements.txt setup.py setup.cfg Pipfile Cargo.toml go.mod pom.xml build.gradle Gemfile; do [ -f "$f" ] && echo "=== $f ===" && cat "$f"; done) && \
+echo "###SECTION_6### Lock files" && \
+(ls -la *.lock uv.lock package-lock.json yarn.lock pnpm-lock.yaml Pipfile.lock Cargo.lock go.sum Gemfile.lock 2>/dev/null || echo "No lock files found") && \
+echo "###SECTION_7### CI/CD configs" && \
+(for f in .github/workflows/*.yml .github/workflows/*.yaml .gitlab-ci.yml Jenkinsfile .circleci/config.yml .travis.yml azure-pipelines.yml bitbucket-pipelines.yml; do [ -f "$f" ] && echo "=== $f ===" && cat "$f"; done) && \
+echo "###SECTION_8### Dockerfiles" && \
+(for f in Dockerfile Dockerfile.* docker-compose.yml docker-compose.yaml; do [ -f "$f" ] && echo "=== $f ===" && cat "$f"; done) && \
+echo "###SECTION_9### README excerpt" && \
+(head -100 README.md 2>/dev/null || head -100 README.rst 2>/dev/null || head -100 README.txt 2>/dev/null || echo "No README found") && \
+echo "###SECTION_10### Test directories" && \
+(find . -type d \( -name 'test' -o -name 'tests' -o -name '__tests__' -o -name 'spec' -o -name 'test_*' \) -not -path './node_modules/*' | head -20) && \
+echo "###SECTION_11### Git summary" && \
+(git log --oneline -20 2>/dev/null || echo "Not a git repo") && \
+(git shortlog -sn --no-merges 2>/dev/null | head -20 || echo "No git history") && \
+echo "###SECTION_12### Largest source files" && \
+(find . -type f -not -path './.git/*' -not -path './node_modules/*' -not -path './.venv/*' \( -name '*.py' -o -name '*.js' -o -name '*.ts' -o -name '*.tsx' -o -name '*.java' -o -name '*.go' -o -name '*.rs' -o -name '*.rb' \) -exec wc -l {} + 2>/dev/null | sort -rn | head -21) && \
+echo "###SECTION_13### Entry points" && \
+(ls -la main.py index.js index.ts src/main.py src/main.ts src/index.js src/index.ts app.py manage.py cmd/main.go 2>/dev/null || echo "No standard entry points") && \
+echo "###SECTION_14### Import graph sample" && \
+(grep -r "^import\|^from.*import" --include="*.py" . 2>/dev/null | head -200 || grep -r "^import\|require(" --include="*.js" --include="*.ts" . 2>/dev/null | head -200) && \
+echo "###SECTION_15### Doc files" && \
 find . -type f \( -name '*.md' -o -name '*.rst' -o -name '*.adoc' \) -not -path './node_modules/*' -not -path './.git/*' | head -50
 ```
+
+**IMPORTANT**: This MUST be executed as a single Bash tool call, NOT as 15 separate calls. The section markers allow you to parse each section's output when assembling the context JSON.
 
 ### 2.2 Write Context File
 

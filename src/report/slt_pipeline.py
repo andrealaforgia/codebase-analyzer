@@ -11,6 +11,7 @@ Pipeline:
 
 from __future__ import annotations
 
+import html
 import json
 import re
 from datetime import datetime, timezone
@@ -76,16 +77,17 @@ def extract_report_data(report_path: Path) -> dict[str, Any] | None:
     Returns the parsed dict or None if extraction fails.
     """
     try:
-        html = report_path.read_text(encoding="utf-8")
+        html_content = report_path.read_text(encoding="utf-8")
     except OSError:
         return None
 
-    match = _REPORT_DATA_RE.search(html)
+    match = _REPORT_DATA_RE.search(html_content)
     if not match:
         return None
 
     try:
-        return json.loads(match.group(1))
+        raw = html.unescape(match.group(1))
+        return json.loads(raw)
     except json.JSONDecodeError:
         return None
 
