@@ -50,12 +50,15 @@ This command:
 Invoke the SLT report pipeline directly:
 
 ```bash
-uv run python -c "from src.report.slt_pipeline import generate_slt_report; import sys; sys.exit(generate_slt_report('{root_dir}', '{output_dir}'))"
+cd "{{ANALYZER_HOME}}" && uv run python -c "from src.report.slt_pipeline import generate_slt_report; import sys; sys.exit(generate_slt_report('{root_dir}', '{output_dir}'))"
 ```
 
 Where:
+- `{{ANALYZER_HOME}}` is the absolute path to the codebase-analyzer project (substituted by `install.sh` during installation)
 - `{root_dir}` is the root directory to scan for reports
 - `{output_dir}` is the output directory (or `None` to default to root_dir)
+
+**IMPORTANT**: The `cd "{{ANALYZER_HOME}}"` prefix is required because the Python pipeline lives in the codebase-analyzer project, not in the directory being scanned. Without it, `uv run` would fail to find the pipeline module.
 
 ### 3.2 Pipeline Result
 

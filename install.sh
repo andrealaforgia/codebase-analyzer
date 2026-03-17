@@ -90,7 +90,9 @@ install_file() {
     fi
 
     mkdir -p "$(dirname "$target")"
-    cp "$source" "$target"
+    # Replace {{ANALYZER_HOME}} placeholder with the actual project path
+    # so the Python pipeline can be invoked from any working directory
+    sed "s|{{ANALYZER_HOME}}|$SCRIPT_DIR|g" "$source" > "$target"
     echo -e "  ${GREEN}✓${NC} Installed $label"
 }
 

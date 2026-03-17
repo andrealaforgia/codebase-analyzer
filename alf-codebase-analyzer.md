@@ -276,13 +276,16 @@ After all agents have completed (or failed), invoke the Python report-generation
 ### 6.1 Pipeline Command
 
 ```bash
-uv run python -c "from src.report.pipeline import generate_report; import sys; sys.exit(generate_report('{results_dir}', '{output_path}', '{project_name}'))"
+cd "{{ANALYZER_HOME}}" && uv run python -c "from src.report.pipeline import generate_report; import sys; sys.exit(generate_report('{results_dir}', '{output_path}', '{project_name}'))"
 ```
 
 Where:
+- `{{ANALYZER_HOME}}` is the absolute path to the codebase-analyzer project (substituted by `install.sh` during installation)
 - `{results_dir}` is the path to the results directory containing agent JSON files
 - `{output_path}` is the final HTML report output path
 - `{project_name}` is the project display name
+
+**IMPORTANT**: The `cd "{{ANALYZER_HOME}}"` prefix is required because the Python pipeline lives in the codebase-analyzer project, not in the target codebase being analyzed. Without it, `uv run` would look for `src/report/pipeline.py` in the target project directory and fail.
 
 ### 6.2 Pipeline Result
 

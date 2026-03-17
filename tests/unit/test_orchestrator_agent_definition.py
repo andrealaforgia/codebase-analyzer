@@ -218,3 +218,9 @@ class TestPythonPipelineInvocation:
         assert has_ordering, (
             "Agent must specify that the pipeline runs after all agents complete"
         )
+
+    def test_pipeline_command_changes_to_analyzer_directory(self, agent_content: str):
+        assert 'cd "{{ANALYZER_HOME}}"' in agent_content, (
+            "Pipeline command must cd to {{ANALYZER_HOME}} so it works "
+            "when the working directory is the target project, not the analyzer"
+        )
